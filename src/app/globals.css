@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   6STANZA DESIGN TOKENS
+   Foundation only — later modules build the cinematic surface treatments
+   on top of these primitives. Keep raw hex/values out of components;
+   consume the semantic tokens below instead.
+   ========================================================================== */
+
+:root {
+  /* ---- Layout ---------------------------------------------------------- */
+  --header-h: 88px;
+
+  /* ---- Brand color primitives ---------------------------------------- */
+  --stz-navy-950: #050a14;
+  --stz-navy-900: #071022;
+  --stz-navy-800: #0b1730;
+  --stz-navy-700: #10203f;
+  --stz-blue-600: #1450d6;
+  --stz-blue-500: #1f63ff;
+  --stz-blue-400: #4a83ff;
+  --stz-blue-300: #8fb0ff;
+  --stz-white: #f7f9fc;
+  --stz-black: #05070a;
+
+  /* ---- Semantic surface / text tokens ---------------------------------- */
+  --color-background: var(--stz-white);
+  --color-background-inverse: var(--stz-navy-950);
+  --color-foreground: var(--stz-navy-950);
+  --color-foreground-inverse: var(--stz-white);
+  --color-muted: #5b6472;
+  --color-muted-inverse: #9aa7bd;
+  --color-border: rgba(5, 10, 20, 0.12);
+  --color-border-inverse: rgba(247, 249, 252, 0.14);
+
+  --color-brand: var(--stz-blue-500);
+  --color-brand-strong: var(--stz-blue-600);
+  --color-brand-soft: var(--stz-blue-300);
+  --color-accent: var(--stz-navy-800);
+
+  --color-navy: var(--stz-navy-900);
+  --color-navy-deep: var(--stz-navy-950);
+  --color-white: var(--stz-white);
+  --color-black: var(--stz-black);
+
+  --color-text-primary: var(--color-foreground);
+  --color-text-secondary: var(--color-muted);
+  --color-text-muted: #8189a0;
+
+  --color-surface: var(--stz-white);
+  --color-surface-elevated: #ffffff;
+  --color-border-subtle: rgba(5, 10, 20, 0.07);
+
+  --color-success: #1a9c6b;
+  --color-warning: #c8862a;
+  --color-error: #d1483f;
+
+  /* ---- State tokens ------------------------------------------------- */
+  --color-state-hover: var(--stz-blue-400);
+  --color-state-focus: var(--stz-blue-500);
+  --color-state-disabled: #c3c9d4;
+
+  /* ---- Cinematic / depth surfaces (prepared, not yet applied) -------- */
+  --surface-glass: rgba(10, 20, 40, 0.55);
+  --surface-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    rgba(31, 99, 255, 0.35) 0%,
+    rgba(5, 10, 20, 0) 70%
+  );
+  --surface-grid-line: rgba(247, 249, 252, 0.06);
+  --surface-transition: var(--stz-navy-950);
+
+  /* ---- Typography scale ---------------------------------------------- */
+  /* Local-font strategy (see MODULE-0-HANDOFF.md): system stacks now so
+     the build never depends on network font fetches. A later module can
+     drop real font files into src/app/fonts/ and load them with
+     next/font/local without touching any token or component below —
+     only the three --font-stz-* values change. */
+  --font-stz-display: ui-serif, "Iowan Old Style", "Palatino Linotype",
+    "URW Palladio L", P052, serif;
+  --font-stz-sans: ui-sans-serif, "Inter", "Segoe UI", system-ui, -apple-system,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-stz-mono: ui-monospace, "SFMono-Regular", "IBM Plex Mono", Menlo,
+    Consolas, monospace;
+
+  --font-display: var(--font-stz-display);
+  --font-sans: var(--font-stz-sans);
+  --font-mono: var(--font-stz-mono);
+
+  --text-display: clamp(3rem, 7vw, 7.5rem);
+  --text-h1: clamp(2.25rem, 4.5vw, 4.5rem);
+  --text-h2: clamp(1.75rem, 3vw, 3rem);
+  --text-h3: clamp(1.25rem, 1.8vw, 1.75rem);
+  --text-display: clamp(3rem, 7vw, 7.5rem);
+  --text-hero: clamp(3.5rem, 9vw, 9.5rem);
+  --text-h1: clamp(2.25rem, 4.5vw, 4.5rem);
+  --text-h2: clamp(1.75rem, 3vw, 3rem);
+  --text-h3: clamp(1.25rem, 1.8vw, 1.75rem);
+  --text-h4: clamp(1.0625rem, 1.4vw, 1.375rem);
+  --text-body-lg: 1.1875rem;
+  --text-body: 1.0625rem;
+  --text-small: 0.9375rem;
+  --text-caption: 0.8125rem;
+  --text-label: 0.75rem;
+  --text-numeral: 1.125rem;
+  --text-nav: 0.8125rem;
+  --text-metadata: 0.75rem;
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;
+  --tracking-label: 0.16em;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.04em;
+
+  /* ---- Spacing scale --------------------------------------------------- */
+  --space-micro: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1.25rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: 6rem;
+  --space-4xl: 8rem;
+  --space-5xl: 11rem;
+
+  /* ---- Layout tokens --------------------------------------------------- */
+  --container-max: 1440px;
+  --container-max-wide: 1680px;
+  --container-max-narrow: 860px;
+  --container-padding: clamp(1.25rem, 4vw, 4rem);
+  --space-section: clamp(4rem, 10vw, 9rem);
+  --space-hero: clamp(6rem, 14vw, 13rem);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-pill: 999px;
+
+  /* ---- Shadow tokens ----------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(5, 10, 20, 0.08);
+  --shadow-md: 0 8px 24px rgba(5, 10, 20, 0.12);
+  --shadow-lg: 0 24px 64px rgba(5, 10, 20, 0.22);
+  --shadow-glow: 0 0 0 1px rgba(31, 99, 255, 0.25), 0 12px 40px rgba(31, 99, 255, 0.22);
+
+  /* ---- Motion tokens --------------------------------------------------- */
+  --duration-instant: 0.1s;
+  --duration-fast: 0.2s;
+  --duration-normal: 0.45s;
+  --duration-base: 0.45s;
+  --duration-slow: 0.9s;
+  --duration-cinematic: 1.6s;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-emphasized: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-emphatic: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-cinematic: cubic-bezier(0.83, 0, 0.17, 1);
+
+  /* ---- Z-index layers --------------------------------------------------- */
+  --z-base: 0;
+  --z-canvas: 10;
+  --z-content: 20;
+  --z-nav: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-background-inverse: var(--color-background-inverse);
+  --color-foreground: var(--color-foreground);
+  --color-foreground-inverse: var(--color-foreground-inverse);
+  --color-muted: var(--color-muted);
+  --color-muted-inverse: var(--color-muted-inverse);
+  --color-border: var(--color-border);
+  --color-border-inverse: var(--color-border-inverse);
+  --color-brand: var(--color-brand);
+  --color-brand-strong: var(--color-brand-strong);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-accent: var(--color-accent);
+  --color-navy: var(--color-navy);
+  --color-navy-deep: var(--color-navy-deep);
+  --color-white: var(--color-white);
+  --color-black: var(--color-black);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-surface: var(--color-surface);
+  --color-surface-elevated: var(--color-surface-elevated);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--stz-navy-950);
+    --color-foreground: var(--stz-white);
+    --color-muted: var(--color-muted-inverse);
+    --color-border: var(--color-border-inverse);
+  }
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: auto; /* Lenis takes over smooth scrolling; keep native auto */
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Respect reduced motion at the CSS layer as a baseline safety net.
+   JS-driven motion additionally checks useReducedMotion(). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}

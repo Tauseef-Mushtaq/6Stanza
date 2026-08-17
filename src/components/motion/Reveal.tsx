@@ -1,0 +1,67 @@
+"use client";
+
+import { createElement, type CSSProperties, type ElementType, type HTMLAttributes, type ReactNode } from "react";
+import { useGsapContext } from "@/hooks/useGsapContext";
+import { createReveal, type RevealDirection } from "@/lib/motion/reveal";
+import { cn } from "@/lib/utils/cn";
+
+interface RevealProps extends Omit<HTMLAttributes<HTMLElement>, "style"> {
+  children: ReactNode;
+  as?: ElementType;
+  className?: string;
+  style?: CSSProperties;
+  direction?: RevealDirection;
+  distance?: number;
+  duration?: number;
+  stagger?: number;
+  delay?: number;
+  start?: string;
+  once?: boolean;
+  clip?: boolean;
+  /** Reveal direct children individually (stagger) instead of the wrapper as one block. */
+  staggerChildren?: boolean;
+}
+
+/**
+ * Drop-in reveal wrapper — the primitive most content on the site will
+ * use to enter the viewport. Wraps `createReveal` in a scoped
+ * `useGsapContext` so cleanup is automatic.
+ */
+export function Reveal({
+  children,
+  as = "div",
+  className,
+  direction = "up",
+  distance,
+  duration,
+  stagger = 0.08,
+  delay = 0,
+  start = "top 85%",
+  once = true,
+  clip = false,
+  staggerChildren = false,
+  style,
+  ...rest
+}: RevealProps) {
+  const scopeRef = useGsapContext<HTMLDivElement>(({ scope }) => {
+    const targets = staggerChildren ? Array.from(scope.children) : scope;
+    createReveal({
+      targets,
+      trigger: scope,
+      direction,
+      distance,
+      duration,
+      stagger,
+      delay,
+      start,
+      once,
+      clip,
+    });
+  }, [direction, distance, duration, stagger, delay, start, once, clip, staggerChildren]);
+
+  return createElement(
+    as,
+    { ref: scopeRef, className: cn("will-change-transform", className), style, ...rest },
+    children
+  );
+}

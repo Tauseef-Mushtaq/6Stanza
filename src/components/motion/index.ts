@@ -1,0 +1,12 @@
+export { Reveal } from "./Reveal";
+export { Parallax } from "./Parallax";
+export { ScaleReveal } from "./ScaleReveal";
+export { SplitHeading } from "./SplitHeading";
+export { PinnedScene } from "./PinnedScene";
+export { HorizontalScroller } from "./HorizontalScroller";
+export { CinematicScene, SceneBackground, SceneContent, SceneVisual } from "./CinematicScene";
+export { ImageEntrance, PinnedImageCrop } from "./ImageMotion";
+export { SceneTransitionStage } from "./SceneTransitionStage";
+export { CinematicCanvasScene } from "./CinematicCanvasScene";
+export { ScrollDrivenGroup, type Vec3Keyframe } from "@/lib/three/ScrollDrivenGroup";
+export { useScrollScene3D } from "@/lib/three/useScrollScene3D";
