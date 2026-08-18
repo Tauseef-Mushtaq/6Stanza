@@ -7,6 +7,7 @@ import { SubtleGrid } from "@/components/ui/Divider";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { Reveal, SplitHeading, CinematicCanvasScene } from "@/components/motion";
 import { BrandGeometryScene } from "@/features/home/scene/BrandGeometry";
+import { BouncingLogos } from "@/features/home/components/BouncingLogos";
 import { ctaRoute } from "@/config/routes";
 
 /**
@@ -26,6 +27,8 @@ export function Hero() {
         style={{ background: "var(--surface-glow)" }}
         aria-hidden
       />
+
+      <BouncingLogos />
 
       <div className="absolute inset-0" style={{ overflow: "visible" }}>
         <CinematicCanvasScene
