@@ -1,34 +1,30 @@
 import type { ProjectInquiry } from "@/features/start-project/data/inquiry";
+import { submitProjectInquiryAction } from "@/features/start-project/actions";
 
 /**
  * Submission boundary for the project-intake form.
  *
- * There is no backend in this module (Module 4E is frontend-only, per
- * spec §13/§26) — this function is the single place a future module
- * should wire up to a real endpoint. Everything above this function
- * (the form, validation, loading/error/success states) is already
- * written against this contract and does not need to change when a
- * real API exists.
+ * Module 5: now calls the real `submitProjectInquiryAction` Server
+ * Action (`UI → Server Action → validation → service → repository →
+ * Supabase`, spec §11) instead of the simulated stub this file used
+ * to contain. The contract is unchanged on purpose — `ProjectForm.tsx`
+ * (and its loading/error/success states) did not need to change at
+ * all for this module, per spec §9/§13's "the backend must adapt to
+ * the existing form."
  *
- * TODO (next module / backend phase): replace the body below with a
- * real request, e.g.:
- *
- *   const res = await fetch("/api/inquiries", {
- *     method: "POST",
- *     headers: { "Content-Type": "application/json" },
- *     body: JSON.stringify(inquiry),
- *   });
- *   if (!res.ok) throw new Error("Submission failed");
- *
- * Until then this resolves after a short simulated delay so the
- * loading state is exercised honestly, and rejects if given no
- * message (defensive parity with validateInquiry) so the error-state
- * UI path is real, reachable code rather than dead code.
+ * Field-level validation errors from the server are surfaced as a
+ * generic thrown error here rather than routed back into
+ * `InquiryErrors` — `ProjectForm.tsx`'s own client-side
+ * `validateInquiry` already runs first and blocks submission before
+ * this function is ever called with invalid data, so a server-side
+ * field error at this point would mean the two validators have
+ * drifted, which is itself the bug to surface (loudly, via the
+ * generic error path) rather than silently reconcile.
  */
 export async function submitInquiry(inquiry: ProjectInquiry): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 900));
+  const result = await submitProjectInquiryAction(inquiry);
 
-  if (!inquiry.message.trim()) {
-    throw new Error("Submission failed — no message provided.");
+  if (!result.ok) {
+    throw new Error(result.message ?? "Submission failed — please check the form and try again.");
   }
 }
