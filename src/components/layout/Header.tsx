@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { MenuTrigger } from "@/components/ui/nav/NavPrimitives";
 import { primaryNav, ctaRoute } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils/cn";
+import { syncHeaderHeightVar } from "@/lib/motion/headerHeight";
 
 /**
  * Premium, minimal navigation: transparent over the hero, gains a
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils/cn";
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 64);
@@ -26,6 +28,11 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Single source of truth for `--header-h` (see lib/motion/headerHeight):
+  // every header-safe-stage consumer reads the real rendered height
+  // instead of a per-component magic number.
+  useEffect(() => syncHeaderHeightVar(headerRef.current!), []);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -36,6 +43,7 @@ export function Header() {
 
   return (
     <header
+      ref={headerRef}
       className="fixed top-0 w-full transition-[background-color,backdrop-filter,border-color] duration-300"
       style={{
         zIndex: "var(--z-nav)",

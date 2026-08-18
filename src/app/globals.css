@@ -9,6 +9,10 @@
 
 :root {
   /* ---- Layout ---------------------------------------------------------- */
+  /* Static fallback for SSR/first paint. Header.tsx overwrites this on
+     `document.documentElement` with the real measured height via
+     ResizeObserver (see lib/motion/headerHeight.ts) — treat this value
+     as a fallback only, never assume it's exact. */
   --header-h: 88px;
 
   /* ---- Brand color primitives ---------------------------------------- */

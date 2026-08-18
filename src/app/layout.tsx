@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/layout/SmoothScrollProvider";
+import { ScrollLifecycle } from "@/components/layout/ScrollLifecycle";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { siteConfig } from "@/config/site";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SmoothScrollProvider>
+          <ScrollLifecycle />
           <Header />
           <main id="main-content" className="flex-1">
             {children}

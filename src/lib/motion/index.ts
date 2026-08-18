@@ -1,6 +1,13 @@
 export { gsap, ScrollTrigger, ensureGsapRegistered } from "./gsap";
 export { getLenisInstance, setLenisInstance, LENIS_DEFAULTS } from "./lenis";
-export { DURATION, EASE, type DurationToken, type EaseToken } from "./tokens";
+export {
+  DURATION,
+  EASE,
+  DAMPING,
+  type DurationToken,
+  type EaseToken,
+  type DampingToken,
+} from "./tokens";
 export { createScrollProgressTrigger, type ScrollProgressOptions } from "./scrollProgress";
 export { createReveal, type RevealOptions, type RevealDirection } from "./reveal";
 export { createParallax, createImageParallax, type ParallaxOptions } from "./parallax";
@@ -19,3 +26,4 @@ export {
   type TypographyRevealOptions,
 } from "./typography";
 export { createImageEntrance, createPinnedImageCrop } from "./image";
+export { isMobileViewport, MOBILE_INTENSITY } from "./mobile";

@@ -23,13 +23,22 @@ interface SceneTransitionStageProps {
  * Demonstrates + provides a reusable "one scene exits, the next enters"
  * stage: two stacked panels, scrubbed from one to the other as the user
  * scrolls through a pinned range, via `createSceneTransition`.
+ *
+ * Under `prefers-reduced-motion` no timeline/trigger is created, so
+ * without an explicit resolved state both absolutely-positioned panels
+ * would render stacked on top of each other. This resolves straight to
+ * the transition's end state (panel B showing, panel A hidden) instead.
  */
 export function SceneTransitionStage({ panels, style = "clip-scale", className, durationVh = 1.25 }: SceneTransitionStageProps) {
   const panelARef = useRef<HTMLDivElement>(null);
   const panelBRef = useRef<HTMLDivElement>(null);
 
   const scopeRef = useGsapContext<HTMLDivElement>(({ scope, isReducedMotion }) => {
-    if (isReducedMotion || !panelARef.current || !panelBRef.current) return;
+    if (isReducedMotion) {
+      if (panelARef.current) panelARef.current.style.display = "none";
+      if (panelBRef.current) panelBRef.current.style.opacity = "1";
+      return;
+    }
 
     const tl = createSceneTransition({
       outgoing: panelARef.current,

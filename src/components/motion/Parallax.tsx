@@ -20,9 +20,17 @@ interface ParallaxProps {
  * A single parallax depth layer. Composing several `<Parallax speed={..}>`
  * elements at different speeds inside the same scene is what produces
  * depth — a single layer moving is just "motion", not parallax.
+ *
+ * Under `prefers-reduced-motion`, no parallax drift is applied — purely
+ * decorative scroll-linked movement is exactly what the preference asks
+ * to skip, and unlike `Reveal`/`ScaleReveal` there's no "resolved end
+ * state" to jump to (the drift has no fixed target), so this simply
+ * leaves the layer static (previously it always drifted regardless of
+ * the preference — spec §22).
  */
 export function Parallax({ children, as = "div", className, speed = 0.4, axis = "y", triggerSelector }: ParallaxProps) {
-  const scopeRef = useGsapContext<HTMLDivElement>(({ scope }) => {
+  const scopeRef = useGsapContext<HTMLDivElement>(({ scope, isReducedMotion }) => {
+    if (isReducedMotion) return;
     const trigger = triggerSelector ? (scope.closest(triggerSelector) ?? scope) : scope.parentElement ?? scope;
     createParallax({ targets: scope, trigger, speed, axis });
   }, [speed, axis, triggerSelector]);

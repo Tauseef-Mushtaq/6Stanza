@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PinnedScene } from "@/components/motion/PinnedScene";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { DAMPING } from "@/lib/motion/tokens";
 
 export interface ServiceRailItem {
   index: number;
@@ -28,11 +30,22 @@ interface ServiceRailProps {
  * Motion is smoothed with a lerp loop (rAF) independent of raw scroll
  * events, so it stays buttery even on fast/short scroll bursts — the
  * shared `PinnedScene`/ScrollTrigger primitive is untouched; smoothing
- * lives locally here.
+ * lives locally here, using the shared `DAMPING.section` token (Part 2)
+ * so this scene's scrub weight matches the rest of the app rather than
+ * a one-off local constant.
+ *
+ * Under `prefers-reduced-motion`, this renders every item as a plain
+ * static stacked list instead of the single-"active"-item scroll
+ * choreography — the radial/rAF version only ever puts one item's
+ * content in the DOM at a time, driven entirely by scroll progress
+ * that never advances when motion is reduced (`PinnedScene` skips
+ * pinning), so without this fallback every service after the first
+ * would be permanently inaccessible (spec §22).
  */
 export function ServiceRail({ items, className, durationVhPerItem = 0.9 }: ServiceRailProps) {
   const total = items.length;
   const [activeIndex, setActiveIndex] = useState(0);
+  const reducedMotion = useReducedMotion();
 
   const pathRef = useRef<SVGPathElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
@@ -66,7 +79,7 @@ export function ServiceRail({ items, className, durationVhPerItem = 0.9 }: Servi
     // Ease the rendered progress toward the raw scroll progress every
     // frame — this is what makes the whole scene feel damped/cinematic
     // instead of snapping 1:1 with the scrollbar.
-    smoothProgressRef.current += (rawProgressRef.current - smoothProgressRef.current) * 0.09;
+    smoothProgressRef.current += (rawProgressRef.current - smoothProgressRef.current) * DAMPING.section;
     const progress = smoothProgressRef.current;
     const continuous = progress * steps;
     const nextIdx = Math.max(0, Math.min(total - 1, Math.round(continuous)));
@@ -110,15 +123,55 @@ export function ServiceRail({ items, className, durationVhPerItem = 0.9 }: Servi
   };
 
   useEffect(() => {
+    if (reducedMotion) return;
     rafRef.current = requestAnimationFrame(render);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
+  }, [total, reducedMotion]);
 
   const active = items[activeIndex] ?? items[0];
   const next = items[Math.min(total - 1, activeIndex + 1)] ?? active;
+
+  if (reducedMotion) {
+    return (
+      <div className={className}>
+        <ul className="flex flex-col gap-10 px-[var(--container-padding)] py-[var(--space-section)]">
+          {items.map((item) => (
+            <li key={item.label} className="flex flex-col gap-3">
+              <span
+                className="font-[var(--font-mono)] uppercase"
+                style={{ fontSize: "var(--text-caption)", letterSpacing: "var(--tracking-label)", color: "var(--color-brand-soft)" }}
+              >
+                {String(item.index).padStart(2, "0")} — {item.category}
+              </span>
+              <h3
+                className="font-[var(--font-display)] tracking-tight"
+                style={{ fontSize: "var(--text-h2)", lineHeight: "var(--leading-tight)" }}
+              >
+                {item.label}
+              </h3>
+              <p className="max-w-md" style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-body)" }}>
+                {item.description}
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {item.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-[var(--radius-pill)] px-4 py-1.5"
+                    style={{ fontSize: "var(--text-caption)", background: "var(--color-border)", color: "var(--color-text-primary)" }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <PinnedScene

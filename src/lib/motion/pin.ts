@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap, ScrollTrigger } from "./gsap";
+import { isMobileViewport, MOBILE_INTENSITY } from "./mobile";
 
 export interface PinnedSceneOptions {
   /** The element that gets pinned (usually the scene container). */
@@ -26,6 +27,12 @@ export interface PinnedSceneOptions {
  * infrastructure behind "user scrolls → section pins → internal scene
  * progresses → visual changes → section releases → next section" from
  * spec §8 — callers supply the visual response via `onProgress`.
+ *
+ * Mobile motion profile (spec §21 — "reduce excessive pinning"):
+ * `durationVh` is shortened by `MOBILE_INTENSITY` under the shared
+ * mobile breakpoint, when the caller hasn't supplied an explicit `end`.
+ * Still fully driven by real scroll distance, just a shorter one — the
+ * pin itself, and everything `onProgress` drives, is untouched.
  */
 export function createPinnedScene(options: PinnedSceneOptions): ScrollTrigger {
   const {
@@ -46,12 +53,13 @@ export function createPinnedScene(options: PinnedSceneOptions): ScrollTrigger {
   return ScrollTrigger.create({
     trigger: pinTarget,
     start,
-    end: end ?? `+=${durationVh * 100}%`,
+    end: end ?? (() => `+=${(isMobileViewport() ? durationVh * MOBILE_INTENSITY : durationVh) * 100}%`),
     pin: true,
     pinSpacing,
     anticipatePin,
     scrub: true,
     markers,
+    invalidateOnRefresh: true,
     onUpdate: (self) => onProgress?.(self.progress, self),
     onEnter,
     onLeave,

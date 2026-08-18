@@ -2,6 +2,7 @@
 
 import { createElement, type CSSProperties, type ElementType, type HTMLAttributes, type ReactNode } from "react";
 import { useGsapContext } from "@/hooks/useGsapContext";
+import { gsap } from "@/lib/motion/gsap";
 import { createScale } from "@/lib/motion/scale";
 import { cn } from "@/lib/utils/cn";
 
@@ -18,7 +19,12 @@ interface ScaleRevealProps extends Omit<HTMLAttributes<HTMLElement>, "style"> {
   end?: string;
 }
 
-/** Cinematic scale-in, or a continuous scroll-scrubbed zoom when `scrub` is set. */
+/**
+ * Cinematic scale-in, or a continuous scroll-scrubbed zoom when `scrub`
+ * is set. Under `prefers-reduced-motion`, resolves straight to the
+ * target scale instead of animating (previously this component ignored
+ * the preference entirely — spec §22).
+ */
 export function ScaleReveal({
   children,
   as = "div",
@@ -31,7 +37,11 @@ export function ScaleReveal({
   end,
   ...rest
 }: ScaleRevealProps) {
-  const scopeRef = useGsapContext<HTMLDivElement>(({ scope }) => {
+  const scopeRef = useGsapContext<HTMLDivElement>(({ scope, isReducedMotion }) => {
+    if (isReducedMotion) {
+      gsap.set(scope, { scale: to });
+      return;
+    }
     createScale({ targets: scope, from, to, scrub, start, end });
   }, [from, to, scrub, start, end]);
 

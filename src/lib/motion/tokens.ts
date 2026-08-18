@@ -28,3 +28,27 @@ export const EASE = {
 
 export type DurationToken = keyof typeof DURATION;
 export type EaseToken = keyof typeof EASE;
+
+/**
+ * Part 2 — shared scroll-scrub smoothing (spec §8: "avoid one scene
+ * feeling glued directly to the mouse wheel while another lags
+ * dramatically behind it"). Several scroll-driven scenes damp raw
+ * ScrollTrigger progress toward a rendered value every frame (a lerp
+ * loop, in DOM/rAF or in an R3F `useFrame`) instead of applying it
+ * 1:1. Before Part 2 each scene picked its own ad-hoc factor —
+ * `ServiceRail` used 0.09, the hero 3D group used 0.15 — which is
+ * exactly the inconsistency the spec calls out. These two tokens are
+ * now the only damping factors any scene should use, chosen close
+ * together so every scrubbed scene reads as one family, with
+ * `cinematic` slightly heavier (more lag, more weight) than `section`
+ * per the motion-hierarchy in spec §4.
+ *
+ * Semantics: each frame, `value += (target - value) * factor`. Smaller
+ * factor = slower catch-up = heavier/laggier; larger = snappier.
+ */
+export const DAMPING = {
+  section: 0.12,
+  cinematic: 0.1,
+} as const;
+
+export type DampingToken = keyof typeof DAMPING;

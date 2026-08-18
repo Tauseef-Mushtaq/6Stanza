@@ -3,6 +3,8 @@
 import { useRef, type ReactNode, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { DAMPING } from "@/lib/motion/tokens";
+import { isMobileViewport, MOBILE_INTENSITY } from "@/lib/motion/mobile";
 
 export interface Vec3Keyframe {
   /** Scroll progress (0 → 1) this keyframe applies at. */
@@ -18,7 +20,15 @@ interface ScrollDrivenGroupProps {
   progressRef: RefObject<number>;
   /** Sorted (or unsorted — sorted internally) keyframes describing the object's journey across the scroll range, per spec §14 (e.g. 0 → enters, 0.5 → rotates, 1 → exits). */
   keyframes: Vec3Keyframe[];
-  /** Smoothing factor for lerping toward the target transform each frame (0 = instant snap, closer to 1 = laggier/smoother). */
+  /**
+   * Smoothing factor for lerping toward the target transform each frame
+   * (0 = laggier/smoother, closer to 1 = instant snap — inverse of the
+   * doc comment this replaces, which had it backwards; see the lerp
+   * call below: `lerp(current, target, damping)`). Defaults to the
+   * shared `DAMPING.cinematic` token (spec §8/§14) so the hero's scrub
+   * feel matches every other damped scene in the app instead of using
+   * a one-off local constant.
+   */
   damping?: number;
 }
 
@@ -73,7 +83,12 @@ function sampleAt(keyframes: Vec3Keyframe[], progress: number) {
  * infrastructure from spec §14; Module 3 supplies the actual object and
  * keyframes.
  */
-export function ScrollDrivenGroup({ children, progressRef, keyframes, damping = 0.15 }: ScrollDrivenGroupProps) {
+export function ScrollDrivenGroup({
+  children,
+  progressRef,
+  keyframes,
+  damping = DAMPING.cinematic,
+}: ScrollDrivenGroupProps) {
   const groupRef = useRef<THREE.Group>(null);
   const current = useRef({ position: new THREE.Vector3(), rotation: new THREE.Euler(), scale: new THREE.Vector3(1, 1, 1) });
 
@@ -84,10 +99,22 @@ export function ScrollDrivenGroup({ children, progressRef, keyframes, damping = 
     const target = sampleAt(keyframes, progressRef.current ?? 0);
     const c = current.current;
 
+    // Mobile motion profile (spec §21 — "reduce 3D intensity"): scale the
+    // travel distance from its rest position down on small viewports, so
+    // the mark drifts through a shorter path instead of sweeping the same
+    // distance across a much narrower screen. Rotation/scale keyframes
+    // (the object's actual geometry/character) are left untouched.
+    const positionScale = isMobileViewport() ? MOBILE_INTENSITY : 1;
+    const scaledPosition: [number, number, number] = [
+      target.position[0] * positionScale,
+      target.position[1] * positionScale,
+      target.position[2] * positionScale,
+    ];
+
     c.position.set(
-      lerp(c.position.x, target.position[0], damping),
-      lerp(c.position.y, target.position[1], damping),
-      lerp(c.position.z, target.position[2], damping)
+      lerp(c.position.x, scaledPosition[0], damping),
+      lerp(c.position.y, scaledPosition[1], damping),
+      lerp(c.position.z, scaledPosition[2], damping)
     );
     c.rotation.set(
       lerp(c.rotation.x, target.rotation[0], damping),

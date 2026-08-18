@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap } from "./gsap";
+import { isMobileViewport, MOBILE_INTENSITY } from "./mobile";
 
 export interface ParallaxOptions {
   targets: gsap.TweenTarget;
@@ -23,6 +24,11 @@ export interface ParallaxOptions {
  * elements, typography, and cards. Layer depth comes from calling this
  * multiple times with different `speed` values on different elements —
  * not from a single global multiplier.
+ *
+ * Mobile motion profile (spec §21 — "reduce parallax distance"): drift
+ * distance is compressed toward zero by `MOBILE_INTENSITY` under the
+ * shared mobile breakpoint, rather than removed — small screens still
+ * get a shallower version of the same effect, not a static layer.
  */
 export function createParallax(options: ParallaxOptions) {
   const {
@@ -38,7 +44,7 @@ export function createParallax(options: ParallaxOptions) {
   // Displacement is expressed as a percentage of the trigger's travel
   // through the viewport, scaled by (1 - speed), so speed=1 is static
   // relative to normal scroll and speed=0 stays visually anchored.
-  const distance = (1 - speed) * 100;
+  const distance = (1 - speed) * 100 * (isMobileViewport() ? MOBILE_INTENSITY : 1);
 
   const vars: gsap.TweenVars = {
     ease: "none",
