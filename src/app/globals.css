@@ -15,6 +15,20 @@
      as a fallback only, never assume it's exact. */
   --header-h: 88px;
 
+  /*
+   * Cinematic safe zone (Module 4G): every pinned/horizontal scene reads
+   * from these two vars instead of duplicating its own header-clearance
+   * or exit-breathing math per file. `--safe-top` = header height + a
+   * consistent breathing gap, so content never starts flush against the
+   * fixed header; `--safe-bottom` is the shared exit gap so scroll-
+   * driven chapters release into the next section instead of a hard cut.
+   * `PinnedScene` and `HorizontalScroller` consume `--safe-top` by
+   * default.
+   */
+  --cinematic-gap: clamp(1.5rem, 4vh, 3rem);
+  --safe-top: calc(var(--header-h) + var(--cinematic-gap));
+  --safe-bottom: clamp(4rem, 8vh, 6rem);
+
   /* ---- Brand color primitives ---------------------------------------- */
   --stz-navy-950: #050a14;
   --stz-navy-900: #071022;

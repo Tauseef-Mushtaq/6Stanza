@@ -1,7 +1,7 @@
 "use client";
 
 import { gsap } from "./gsap";
-import { DURATION, EASE } from "./tokens";
+import { DURATION, EASE, STAGGER } from "./tokens";
 
 export type SplitUnit = "lines" | "words" | "chars";
 
@@ -124,7 +124,12 @@ export interface TypographyRevealOptions {
 export function createTypographyReveal(element: HTMLElement, options: TypographyRevealOptions = {}) {
   const {
     unit = "words",
-    stagger = unit === "chars" ? 0.02 : unit === "lines" ? 0.12 : 0.05,
+    // "lines" stays an intentionally unique value beyond the STAGGER
+    // scale (spec §16) — line-reveal is the most emphasized, least
+    // frequent unit (per this file's own note: "not every heading
+    // should animate character-by-character"), and reads better with
+    // more separation than the tight/standard word/char tiers give it.
+    stagger = unit === "chars" ? STAGGER.tight : unit === "lines" ? 0.12 : STAGGER.standard,
     duration = unit === "chars" ? DURATION.normal : DURATION.slow,
     ease = EASE.smooth,
     blur = unit !== "chars",

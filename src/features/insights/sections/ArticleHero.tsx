@@ -18,7 +18,7 @@ export function ArticleHero({ insight }: { insight: Insight }) {
   return (
     <section
       className="relative flex min-h-[85svh] w-full flex-col justify-center overflow-hidden"
-      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--header-h)" }}
+      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--safe-top)" }}
     >
       <SubtleGrid className="opacity-40" />
 

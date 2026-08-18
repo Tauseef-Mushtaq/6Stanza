@@ -24,7 +24,7 @@ export function ProjectDetailHero({ project, index, total, positioning, year = "
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center overflow-hidden"
-      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--header-h)" }}
+      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--safe-top)" }}
     >
       <SubtleGrid className="opacity-30" />
       <Parallax speed={0.2} className="pointer-events-none absolute inset-0" aria-hidden>

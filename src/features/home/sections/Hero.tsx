@@ -43,7 +43,7 @@ export function Hero() {
 
       <Container
         className="relative z-10 flex flex-col gap-6 pb-16 lg:max-w-[58%]"
-        style={{ paddingTop: "calc(var(--header-h) + clamp(1rem, 4vh, 3rem))" }}
+        style={{ paddingTop: "var(--safe-top)" }}
       >
         <Reveal direction="up" delay={0.1}>
           <TechnicalLabel style={{ color: "var(--color-brand-soft)" }}>

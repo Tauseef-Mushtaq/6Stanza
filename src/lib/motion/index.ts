@@ -4,9 +4,17 @@ export {
   DURATION,
   EASE,
   DAMPING,
+  STAGGER,
+  DISTANCE,
+  PARALLAX,
+  SCALE,
   type DurationToken,
   type EaseToken,
   type DampingToken,
+  type StaggerToken,
+  type DistanceToken,
+  type ParallaxToken,
+  type ScaleToken,
 } from "./tokens";
 export { createScrollProgressTrigger, type ScrollProgressOptions } from "./scrollProgress";
 export { createReveal, type RevealOptions, type RevealDirection } from "./reveal";

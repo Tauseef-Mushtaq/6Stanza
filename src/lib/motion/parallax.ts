@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap } from "./gsap";
+import { EASE, PARALLAX } from "./tokens";
 import { isMobileViewport, MOBILE_INTENSITY } from "./mobile";
 
 export interface ParallaxOptions {
@@ -29,12 +30,18 @@ export interface ParallaxOptions {
  * distance is compressed toward zero by `MOBILE_INTENSITY` under the
  * shared mobile breakpoint, rather than removed — small screens still
  * get a shallower version of the same effect, not a static layer.
+ *
+ * Module 4F: default `speed` is `PARALLAX.standard` (0.2) — audited
+ * every `<Parallax speed={...}>` call site in the app and found nearly
+ * all decorative background layers already converge on this value
+ * (0.15–0.25), so this default now names what was already the de facto
+ * convention rather than the previously-unrelated `0.3`.
  */
 export function createParallax(options: ParallaxOptions) {
   const {
     targets,
     trigger,
-    speed = 0.3,
+    speed = PARALLAX.standard,
     axis = "y",
     start = "top bottom",
     end = "bottom top",
@@ -47,7 +54,7 @@ export function createParallax(options: ParallaxOptions) {
   const distance = (1 - speed) * 100 * (isMobileViewport() ? MOBILE_INTENSITY : 1);
 
   const vars: gsap.TweenVars = {
-    ease: "none",
+    ease: EASE.linear,
     scrollTrigger: {
       trigger: trigger ?? (targets as Element | string),
       start,

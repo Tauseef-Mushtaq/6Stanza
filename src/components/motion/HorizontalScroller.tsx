@@ -40,7 +40,7 @@ interface HorizontalScrollerProps {
  *
  * Header-safe stage: while pinned, this component's own scope sits at
  * the top of the viewport (see `headerSafe` above), so the safe area
- * is carved out *inside* the pinned box via `--header-h` padding-top —
+ * is carved out *inside* the pinned box via `--safe-top` padding-top —
  * the single reusable mechanism every HorizontalScroller/PinnedScene
  * consumer shares (see lib/motion/headerHeight.ts), rather than a
  * per-page magic-number hack.
@@ -74,7 +74,7 @@ export function HorizontalScroller({
     <div
       ref={scopeRef}
       className={cn("relative w-full", reducedMotion ? "overflow-x-auto" : "overflow-x-auto md:overflow-hidden", className)}
-      style={headerSafe ? { paddingTop: "var(--header-h)" } : undefined}
+      style={headerSafe ? { paddingTop: "var(--safe-top)" } : undefined}
     >
       <div data-horizontal-track className={cn("flex w-max flex-nowrap gap-8", trackClassName)}>
         {children}

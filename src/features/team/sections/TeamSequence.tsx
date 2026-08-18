@@ -101,7 +101,7 @@ export function TeamSequence() {
         </HorizontalScroller>
       </div>
 
-      <div style={{ height: "clamp(5rem, 9vh, 8rem)" }} />
+      <div style={{ height: "var(--safe-bottom)" }} />
     </section>
   );
 }

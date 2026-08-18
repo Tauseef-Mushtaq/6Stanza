@@ -63,6 +63,10 @@ export function Process() {
           ))}
         </HorizontalScroller>
       </div>
+
+      {/* Exit breathing room (Module 4G's --safe-bottom) — this chapter
+          had no gap into the next section before this fix. */}
+      <div style={{ height: "var(--safe-bottom)" }} />
     </section>
   );
 }

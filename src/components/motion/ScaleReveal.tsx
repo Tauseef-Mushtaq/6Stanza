@@ -3,6 +3,7 @@
 import { createElement, type CSSProperties, type ElementType, type HTMLAttributes, type ReactNode } from "react";
 import { useGsapContext } from "@/hooks/useGsapContext";
 import { gsap } from "@/lib/motion/gsap";
+import { SCALE } from "@/lib/motion/tokens";
 import { createScale } from "@/lib/motion/scale";
 import { cn } from "@/lib/utils/cn";
 
@@ -30,7 +31,7 @@ export function ScaleReveal({
   as = "div",
   className,
   style,
-  from = 0.92,
+  from = SCALE.standard,
   to = 1,
   scrub = false,
   start,

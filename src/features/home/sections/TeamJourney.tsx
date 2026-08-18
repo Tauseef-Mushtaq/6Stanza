@@ -15,7 +15,7 @@ import { team } from "@/features/home/data/team";
 export function TeamJourney() {
   return (
     <section className="relative w-full" style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)" }}>
-      <Container style={{ paddingTop: "calc(var(--header-h) + clamp(1.5rem, 4vh, 3rem))" }}>
+      <Container style={{ paddingTop: "var(--space-section)" }}>
         <div className="flex items-center gap-3">
           <AccentLine />
           <TechnicalLabel style={{ color: "var(--color-brand-soft)" }}>06 — Team</TechnicalLabel>
@@ -80,9 +80,10 @@ export function TeamJourney() {
         </HorizontalScroller>
       </div>
 
-      {/* Intentional breathing room before the next chapter — the
-          horizontal experience shouldn't hand off directly into it. */}
-      <div style={{ height: "clamp(6rem, 10vh, 9rem)" }} />
+      {/* Shared exit breathing room (Module 4G's --safe-bottom) — the
+          horizontal experience shouldn't hand off directly into the
+          next section. */}
+      <div style={{ height: "var(--safe-bottom)" }} />
     </section>
   );
 }

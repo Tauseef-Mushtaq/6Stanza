@@ -3,6 +3,7 @@
 import { createElement, type CSSProperties, type ElementType, type HTMLAttributes, type ReactNode } from "react";
 import { useGsapContext } from "@/hooks/useGsapContext";
 import { gsap } from "@/lib/motion/gsap";
+import { STAGGER } from "@/lib/motion/tokens";
 import { createReveal, type RevealDirection } from "@/lib/motion/reveal";
 import { cn } from "@/lib/utils/cn";
 
@@ -42,7 +43,7 @@ export function Reveal({
   direction = "up",
   distance,
   duration,
-  stagger = 0.08,
+  stagger = STAGGER.loose,
   delay = 0,
   start = "top 85%",
   once = true,

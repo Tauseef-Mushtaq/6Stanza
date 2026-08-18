@@ -16,6 +16,12 @@ export interface ImageEntranceOptions {
 /**
  * "Image enters → slight scale → subtle rotation → settles" pattern from
  * spec §12. A single considered entrance, not a generic fade.
+ *
+ * `scaleFrom`/`rotateFrom` intentionally aren't drawn from the `SCALE`
+ * token family (spec §16 — document intentional exceptions): `SCALE` is
+ * the shrink-to-normal "reveal in" family (<1 → 1), while this is a
+ * conceptually different zoom-settle pattern (>1 → 1, plus a rotation
+ * axis `SCALE` doesn't have). Kept as its own considered default.
  */
 export function createImageEntrance(options: ImageEntranceOptions) {
   const {
@@ -82,7 +88,7 @@ export function createPinnedImageCrop(options: PinnedCropOptions) {
   return gsap.to(image, {
     scale: scaleTo,
     ...(objectPositionTo ? { objectPosition: objectPositionTo } : {}),
-    ease: "none",
+    ease: EASE.linear,
     scrollTrigger: {
       trigger: container,
       start: "top top",

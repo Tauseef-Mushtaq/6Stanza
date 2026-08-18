@@ -3,6 +3,7 @@
 import { createElement, type ElementType, type ReactNode } from "react";
 import { useGsapContext } from "@/hooks/useGsapContext";
 import { createParallax } from "@/lib/motion/parallax";
+import { PARALLAX } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils/cn";
 
 interface ParallaxProps {
@@ -28,7 +29,7 @@ interface ParallaxProps {
  * leaves the layer static (previously it always drifted regardless of
  * the preference — spec §22).
  */
-export function Parallax({ children, as = "div", className, speed = 0.4, axis = "y", triggerSelector }: ParallaxProps) {
+export function Parallax({ children, as = "div", className, speed = PARALLAX.standard, axis = "y", triggerSelector }: ParallaxProps) {
   const scopeRef = useGsapContext<HTMLDivElement>(({ scope, isReducedMotion }) => {
     if (isReducedMotion) return;
     const trigger = triggerSelector ? (scope.closest(triggerSelector) ?? scope) : scope.parentElement ?? scope;

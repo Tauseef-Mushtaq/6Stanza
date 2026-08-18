@@ -13,7 +13,7 @@ export function AboutHero() {
   return (
     <section
       className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden text-center"
-      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--header-h)" }}
+      style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--safe-top)" }}
     >
       <SubtleGrid className="opacity-40" />
       <Parallax speed={0.25} className="pointer-events-none absolute inset-0" aria-hidden>

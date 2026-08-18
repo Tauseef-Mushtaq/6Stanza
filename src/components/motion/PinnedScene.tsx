@@ -53,7 +53,7 @@ export function PinnedScene({ children, className, durationVh = 1.5, onProgress,
         reducedMotion ? "min-h-0 overflow-visible" : "min-h-svh overflow-hidden",
         className
       )}
-      style={{ paddingTop: "var(--header-h)" }}
+      style={{ paddingTop: "var(--safe-top)" }}
     >
       {children}
     </div>

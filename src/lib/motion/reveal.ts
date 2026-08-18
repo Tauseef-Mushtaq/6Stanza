@@ -1,7 +1,7 @@
 "use client";
 
 import { gsap } from "./gsap";
-import { DURATION, EASE } from "./tokens";
+import { DURATION, EASE, STAGGER, DISTANCE } from "./tokens";
 
 export type RevealDirection = "up" | "down" | "left" | "right" | "none";
 
@@ -27,10 +27,10 @@ export interface RevealOptions {
 }
 
 const AXIS_DISTANCE: Record<RevealDirection, number> = {
-  up: 56,
-  down: 56,
-  left: 56,
-  right: 56,
+  up: DISTANCE.standard,
+  down: DISTANCE.standard,
+  left: DISTANCE.standard,
+  right: DISTANCE.standard,
   none: 0,
 };
 
@@ -59,7 +59,7 @@ export function createReveal(options: RevealOptions) {
     distance,
     duration = DURATION.slow,
     ease = EASE.smooth,
-    stagger = 0.08,
+    stagger = STAGGER.loose,
     delay = 0,
     start = "top 85%",
     once = true,

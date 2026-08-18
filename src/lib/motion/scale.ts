@@ -1,7 +1,7 @@
 "use client";
 
 import { gsap } from "./gsap";
-import { DURATION, EASE } from "./tokens";
+import { DURATION, EASE, SCALE } from "./tokens";
 
 export interface ScaleOptions {
   targets: gsap.TweenTarget;
@@ -27,7 +27,7 @@ export function createScale(options: ScaleOptions) {
   const {
     targets,
     trigger,
-    from = 0.92,
+    from = SCALE.standard,
     to = 1,
     duration = DURATION.slow,
     ease = EASE.cinematic,
@@ -43,7 +43,7 @@ export function createScale(options: ScaleOptions) {
     {
       scale: to,
       duration: scrub ? undefined : duration,
-      ease: scrub ? "none" : ease,
+      ease: scrub ? EASE.linear : ease,
       scrollTrigger: {
         trigger: trigger ?? (targets as Element | string),
         start,

@@ -1,6 +1,7 @@
 "use client";
 
 import { gsap, ScrollTrigger } from "./gsap";
+import { EASE } from "./tokens";
 
 export interface HorizontalScrollOptions {
   /** The pinned viewport/container element. */
@@ -37,7 +38,7 @@ export function createHorizontalScroll(options: HorizontalScrollOptions) {
       if (!el || !containerEl) return 0;
       return -(el.scrollWidth - containerEl.clientWidth);
     },
-    ease: "none",
+    ease: EASE.linear,
     scrollTrigger: {
       trigger: container,
       start,
