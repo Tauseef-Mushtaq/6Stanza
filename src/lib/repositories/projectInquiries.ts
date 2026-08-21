@@ -2,6 +2,9 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ProjectInquiryInput } from "@/lib/validation/projectInquiry";
+import type { Database, InquiryStatus } from "@/lib/supabase/database.types";
+
+export type ProjectInquiryRow = Database["public"]["Tables"]["project_inquiries"]["Row"];
 
 /**
  * Data access for `project_inquiries` — the only file in the codebase
@@ -29,4 +32,58 @@ export async function insertProjectInquiry(input: ProjectInquiryInput) {
   });
 
   if (error) throw error;
+}
+
+/**
+ * Module 7A — admin reads/writes, same shape/rationale as the
+ * `contact_inquiries` repository's equivalents: relies on
+ * `project_inquiries_select_admin_only`/`_update_admin_only` RLS
+ * (`supabase/migrations/0003_project_inquiries.sql`), still goes
+ * through the normal server client, and filters by `status`
+ * server-side when a filter is supplied.
+ */
+export async function listProjectInquiries(status?: InquiryStatus, limit?: number): Promise<ProjectInquiryRow[]> {
+  const supabase = await createSupabaseServerClient();
+
+  let query = supabase.from("project_inquiries").select("*").order("created_at", { ascending: false });
+  if (status) query = query.eq("status", status);
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Module 8 — see `contactInquiries.ts`'s `countContactInquiries` for the rationale; same shape here. */
+export async function countProjectInquiries(status?: InquiryStatus): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+
+  let query = supabase.from("project_inquiries").select("*", { count: "exact", head: true });
+  if (status) query = query.eq("status", status);
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function getProjectInquiry(id: string): Promise<ProjectInquiryRow | null> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase.from("project_inquiries").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ?? null;
+}
+
+export async function updateProjectInquiryStatus(id: string, status: InquiryStatus): Promise<ProjectInquiryRow> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("project_inquiries")
+    .update({ status })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
 }

@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, SubtleGrid } from "@/components/ui/Divider";
 import { Reveal, SplitHeading, Parallax } from "@/components/motion";
-import { services } from "@/features/home/data/services";
+import { getPublicServices } from "@/features/services/data/publicServices";
 
 /**
  * CHAPTER 01 — Services index hero. Same visual family as About's
@@ -12,7 +12,9 @@ import { services } from "@/features/home/data/services";
  * of centered, and carries a service-count indicator instead of the
  * brand mark, so it doesn't read as a copy.
  */
-export function ServicesHero() {
+export async function ServicesHero() {
+  const services = await getPublicServices();
+
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center overflow-hidden"

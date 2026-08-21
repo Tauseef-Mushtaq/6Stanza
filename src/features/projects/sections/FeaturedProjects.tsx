@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { Divider } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
-import { projects } from "@/features/home/data/projects";
+import { getPublicProjects } from "@/features/projects/data/publicProjects";
 
 /**
  * Deterministic technical visual per project — three distinct rendering
@@ -80,13 +80,25 @@ function ProjectVisual({ seed, accent, mode }: { seed: number; accent: number; m
  * placement and gets its own `ProjectVisual` rendering mode so no two
  * entries look identical.
  */
-export function FeaturedProjects() {
+export async function FeaturedProjects() {
+  const projects = await getPublicProjects();
+
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-4xl)" }}>
         <div className="flex flex-col">
           <Divider />
-          {projects.map((project, i) => {
+          {projects.length === 0 ? (
+            // Module 9G — empty state (spec §20): no fabricated
+            // project content, no reintroduced static fallback.
+            <p
+              className="py-16 text-center"
+              style={{ fontSize: "var(--text-body-lg)", color: "var(--color-text-secondary)" }}
+            >
+              Projects are being updated — check back shortly.
+            </p>
+          ) : (
+            projects.map((project, i) => {
             const mode = (i % 3) as 0 | 1 | 2;
             const flip = i % 2 === 1;
             return (
@@ -153,7 +165,8 @@ export function FeaturedProjects() {
                 </div>
               </article>
             );
-          })}
+            })
+          )}
           <Divider />
         </div>
       </Container>

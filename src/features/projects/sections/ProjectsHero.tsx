@@ -2,16 +2,19 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, SubtleGrid } from "@/components/ui/Divider";
 import { Reveal, SplitHeading, Parallax } from "@/components/motion";
-import { projects } from "@/features/home/data/projects";
+import { getPublicProjects } from "@/features/projects/data/publicProjects";
 
 /**
  * CHAPTER 01 — Projects hero. Same dark/glow, `--header-h`-cleared,
  * full-viewport family as Services' and About's heroes (spec §4) —
- * left-anchored like Services, with a project-count indicator instead
- * of a service count, so the three secondary-page openers read as one
- * connected family without being copies of each other.
+ * left-anchored like Services, with a project-count indicator (Module
+ * 9G — now the published CMS Projects count) instead of a service
+ * count, so the three secondary-page openers read as one connected
+ * family without being copies of each other.
  */
-export function ProjectsHero() {
+export async function ProjectsHero() {
+  const projects = await getPublicProjects();
+
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center overflow-hidden"

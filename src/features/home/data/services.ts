@@ -9,6 +9,14 @@ export interface ServiceItem {
   tags: string[];
   /** Which visual pattern ServiceVisual should render for this item. */
   visual: "web" | "cloud" | "devops" | "security" | "network" | "marketing" | "video" | "seo";
+  /**
+   * Module 9N — optional CMS-uploaded image URL (from `services.media_path`
+   * via `getPublicMediaUrl("general", ...)`). When present, `ServiceVisual`
+   * renders this instead of the procedural `visual` mark. Absent for the
+   * static fallback array below and for any published service with no
+   * uploaded image.
+   */
+  image?: string;
 }
 
 /**

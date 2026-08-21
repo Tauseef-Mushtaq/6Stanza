@@ -9,6 +9,12 @@ import { team } from "@/features/home/data/team";
  * CHAPTER 06 — editorial team presentation: tall proportioned cards,
  * a monogram treatment standing in for photography until real assets
  * exist, and a consistent hover lift. Data-shaped for a future CMS.
+ *
+ * Module 9H note: this component is not imported by any active route
+ * (`src/app/(site)/page.tsx` renders `TeamJourney` instead — see
+ * `MODULE-9H-HANDOFF.md` §K). It's left as-is, out of scope for this
+ * migration, and is the reason `src/features/home/data/team.ts` still
+ * exports a runtime `team` array rather than only the `TeamMember` type.
  */
 export function Team() {
   return (

@@ -1,11 +1,15 @@
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { Reveal, HorizontalScroller } from "@/components/motion";
+import type { ProjectGalleryImage } from "@/features/projects/data/projectDetails";
 
 interface ProjectGalleryProps {
   accent: number;
   seed: number;
+  /** Module 9K — real CMS-uploaded images (spec §13), already ordered. Empty/omitted when the admin hasn't uploaded any — every panel falls back to the original procedural placeholder in that case, so this chapter never regresses for existing projects. */
+  images?: ProjectGalleryImage[];
 }
 
 const PANEL_WIDTHS = ["58vw", "38vw", "48vw", "34vw"];
@@ -16,11 +20,18 @@ const PANEL_ASPECTS = ["aspect-[16/10]", "aspect-[3/4]", "aspect-[4/3]", "aspect
  * drives-horizontal-movement sequence of asymmetric panels — reusing
  * `HorizontalScroller` (the same primitive Process/Team already use)
  * rather than a normal image grid, per the brief's explicit
- * instruction not to place three images in a row. Panels are
- * structured gradient/diagram placeholders today, ready to swap for
- * real screenshots/video without touching the layout or motion.
+ * instruction not to place three images in a row.
+ *
+ * Module 9K: each of the four panels independently renders a real
+ * uploaded image when one is available at that index, and falls back
+ * to the original gradient/diagram placeholder otherwise — this is
+ * exactly the "ready to swap for real screenshots/video without
+ * touching the layout or motion" the component's own comment already
+ * promised, so no layout/motion code changed, only what fills a panel.
+ * Only the first four `images` are ever shown, matching the fixed
+ * four-panel layout (spec §13 — "preserve the existing layout").
  */
-export function ProjectGallery({ accent, seed }: ProjectGalleryProps) {
+export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProps) {
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-4xl)" }}>
@@ -32,27 +43,36 @@ export function ProjectGallery({ accent, seed }: ProjectGalleryProps) {
 
       <div className="mt-12">
         <HorizontalScroller trackClassName="items-center px-[var(--container-padding)] gap-6 lg:gap-8">
-          {PANEL_WIDTHS.map((width, i) => (
-            <div
-              key={i}
-              className={`relative shrink-0 ${PANEL_ASPECTS[i]} overflow-hidden rounded-[var(--radius-lg)]`}
-              style={{
-                width,
-                maxWidth: "720px",
-                background: `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + i * 3}%), hsl(${accent} 65% ${26 + i * 4}%))`,
-                border: "1px solid var(--color-border)",
-              }}
-            >
-              <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden preserveAspectRatio="none">
-                <defs>
-                  <pattern id={`gallery-grid-${seed}-${i}`} width="8" height="8" patternUnits="userSpaceOnUse">
-                    <path d="M 8 0 L 0 0 0 8" fill="none" stroke={`hsl(${accent} 60% 70%)`} strokeWidth="0.15" opacity={0.25} />
-                  </pattern>
-                </defs>
-                <rect width="100" height="100" fill={`url(#gallery-grid-${seed}-${i})`} />
-              </svg>
-            </div>
-          ))}
+          {PANEL_WIDTHS.map((width, i) => {
+            const image = images[i];
+            return (
+              <div
+                key={i}
+                className={`relative shrink-0 ${PANEL_ASPECTS[i]} overflow-hidden rounded-[var(--radius-lg)]`}
+                style={{
+                  width,
+                  maxWidth: "720px",
+                  background: image
+                    ? undefined
+                    : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + i * 3}%), hsl(${accent} 65% ${26 + i * 4}%))`,
+                  border: "1px solid var(--color-border)",
+                }}
+              >
+                {image ? (
+                  <Image src={image.src} alt={image.alt} fill className="object-cover" sizes="(min-width: 1024px) 50vw, 90vw" />
+                ) : (
+                  <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden preserveAspectRatio="none">
+                    <defs>
+                      <pattern id={`gallery-grid-${seed}-${i}`} width="8" height="8" patternUnits="userSpaceOnUse">
+                        <path d="M 8 0 L 0 0 0 8" fill="none" stroke={`hsl(${accent} 60% 70%)`} strokeWidth="0.15" opacity={0.25} />
+                      </pattern>
+                    </defs>
+                    <rect width="100" height="100" fill={`url(#gallery-grid-${seed}-${i})`} />
+                  </svg>
+                )}
+              </div>
+            );
+          })}
         </HorizontalScroller>
       </div>
 

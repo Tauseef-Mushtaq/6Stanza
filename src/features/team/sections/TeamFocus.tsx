@@ -3,7 +3,8 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { Divider } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
-import { team } from "@/features/home/data/team";
+import { TeamSocialLinks } from "@/features/team/components/TeamSocialLinks";
+import type { TeamMember } from "@/features/home/data/team";
 
 /**
  * CHAPTER 04 — individual focus (§13): one member at a time, full-width
@@ -11,8 +12,13 @@ import { team } from "@/features/home/data/team";
  * `FeaturedProjects` — alternating side, `Reveal`/`ScaleReveal` only),
  * re-oriented for a person instead of a case study so it reads as a
  * companion chapter, not a re-skin of `TeamSequence` above it.
+ *
+ * Module 9H — `team` is now passed in from the CMS-backed `/team`
+ * page instead of imported from the static data file.
  */
-export function TeamFocus() {
+export function TeamFocus({ team }: { team: TeamMember[] }) {
+  if (team.length === 0) return null;
+
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-4xl)" }}>
@@ -78,6 +84,12 @@ export function TeamFocus() {
                         {member.shortBio}
                       </p>
                     </Reveal>
+
+                    {member.socialLinks && member.socialLinks.length > 0 ? (
+                      <Reveal direction="up" delay={0.2}>
+                        <TeamSocialLinks links={member.socialLinks} className="pt-2" />
+                      </Reveal>
+                    ) : null}
                   </div>
                 </div>
               </article>

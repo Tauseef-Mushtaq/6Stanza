@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, SubtleGrid } from "@/components/ui/Divider";
 import { Reveal, SplitHeading, Parallax } from "@/components/motion";
-import { team } from "@/features/home/data/team";
+import type { TeamMember } from "@/features/home/data/team";
 
 /**
  * CHAPTER 01 — Team hero. Same full-viewport, mark-anchored family as
@@ -10,8 +10,12 @@ import { team } from "@/features/home/data/team";
  * headline sits left, and the team's headcount runs as a large
  * background numeral on the right — establishing "people" as the
  * subject before a single name appears.
+ *
+ * Module 9H — `team` is now passed in from the CMS-backed `/team`
+ * page instead of imported from the static data file (spec §28: no
+ * visual/behavioral change, only the data source moved).
  */
-export function TeamHero() {
+export function TeamHero({ team }: { team: TeamMember[] }) {
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center overflow-hidden"

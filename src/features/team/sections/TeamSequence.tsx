@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { HorizontalScroller } from "@/components/motion";
-import { team } from "@/features/home/data/team";
+import type { TeamMember } from "@/features/home/data/team";
 
 /**
  * CHAPTER 03 — the cinematic team sequence (§9/§10): vertical scroll
@@ -16,10 +16,17 @@ import { team } from "@/features/home/data/team";
  * active member off `HorizontalScroller`'s own scroll progress, so the
  * "current person" reads clearly even though several portraits are
  * visible on desktop at once.
+ *
+ * Module 9H — `team` is now passed in from the CMS-backed `/team`
+ * page instead of imported from the static data file. Renders nothing
+ * when there are no published members (spec §17) rather than reading
+ * `team[0]` off an empty array.
  */
-export function TeamSequence() {
+export function TeamSequence({ team }: { team: TeamMember[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const active = team[activeIndex];
+
+  if (!active) return null;
 
   return (
     <section

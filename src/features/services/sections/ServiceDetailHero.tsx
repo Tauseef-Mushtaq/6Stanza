@@ -74,7 +74,7 @@ export function ServiceDetailHero({ service, total, prev, next }: ServiceDetailH
         </div>
 
         <Reveal direction="up" delay={0.15} className="mx-auto w-full max-w-md lg:max-w-none">
-          <ServiceVisual kind={service.visual} />
+          <ServiceVisual kind={service.visual} image={service.image} label={service.label} />
         </Reveal>
       </Container>
     </section>

@@ -19,8 +19,18 @@ export interface TeamMember {
 }
 
 /**
- * Structured team data — ready to be swapped for a CMS/database source
- * later without touching the Team section's layout or motion.
+ * Module 9H — the active public Team consumers (`/team`'s `TeamHero`/
+ * `TeamSequence`/`TeamFocus` and the Home `TeamJourney`) now source
+ * members from published CMS content via
+ * `src/features/team/data/publicTeam.ts`, not this array.
+ *
+ * This runtime array is retained (not removed) only because
+ * `src/features/home/sections/Team.tsx` — an orphaned legacy
+ * component not imported by any active route (verified via
+ * `rg "sections/Team\b" src`) — still imports it. See that file's
+ * header comment and `MODULE-9H-HANDOFF.md` §K for details. The
+ * `TeamMember` type above remains the live frontend contract for both
+ * the CMS adapter and every presentation component.
  */
 export const team: TeamMember[] = [
   {

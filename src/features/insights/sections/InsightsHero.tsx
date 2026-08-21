@@ -2,7 +2,6 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, SubtleGrid } from "@/components/ui/Divider";
 import { Reveal, SplitHeading, Parallax } from "@/components/motion";
-import { insights } from "@/features/insights/data/insights";
 
 /**
  * CHAPTER 01 — Insights hero, in the same full-viewport family as
@@ -10,8 +9,12 @@ import { insights } from "@/features/insights/data/insights";
  * background index count instead of a numeral tied to headcount, and
  * copy that frames the section as technical thinking rather than a
  * blog.
+ *
+ * Module 9I — `count` is now passed in from the CMS-backed `/insights`
+ * page instead of reading `insights.length` off the static array
+ * (spec §33: no visual/behavioral change, only the data source moved).
  */
-export function InsightsHero() {
+export function InsightsHero({ count }: { count: number }) {
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center overflow-hidden"
@@ -26,7 +29,7 @@ export function InsightsHero() {
         <Reveal direction="up" className="flex items-center gap-3">
           <AccentLine />
           <TechnicalLabel style={{ color: "var(--color-brand-soft)" }}>
-            Insights — {String(insights.length).padStart(2, "0")} Articles
+            Insights — {String(count).padStart(2, "0")} Articles
           </TechnicalLabel>
         </Reveal>
 

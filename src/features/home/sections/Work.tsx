@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, Divider } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
-import { projects } from "@/features/home/data/projects";
+import { getPublicProjects } from "@/features/projects/data/publicProjects";
 
 /**
  * CHAPTER 05 — large editorial project presentations (spec §13), not a
@@ -75,7 +75,9 @@ function ProjectDiagram({ seed, accent }: { seed: number; accent: number }) {
   );
 }
 
-export function Work() {
+export async function Work() {
+  const projects = await getPublicProjects();
+
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-section)" }}>
@@ -95,7 +97,17 @@ export function Work() {
 
         <div className="mt-10 flex flex-col">
           <Divider />
-          {projects.map((project, i) => (
+          {projects.length === 0 ? (
+            // Module 9G — empty state (spec §17): preserve the section
+            // composition, no fabricated content, no static fallback.
+            <p
+              className="py-16 text-center"
+              style={{ fontSize: "var(--text-body-lg)", color: "var(--color-text-secondary)" }}
+            >
+              Selected work is being updated — check back shortly.
+            </p>
+          ) : (
+            projects.map((project, i) => (
             <article key={project.slug} className="flex min-h-[86vh] flex-col justify-center py-8">
               <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10">
                 <div className="lg:col-span-7 lg:order-2">
@@ -149,7 +161,8 @@ export function Work() {
                 </div>
               </div>
             </article>
-          ))}
+            ))
+          )}
           <Divider />
         </div>
 

@@ -5,16 +5,7 @@ import { NumberIndicator } from "@/components/ui/NumberIndicator";
 import { Reveal } from "@/components/motion";
 import { ServiceRail, type ServiceRailItem } from "@/features/experience/services/ServiceRail";
 import { ServiceVisual } from "@/features/home/components/ServiceVisual";
-import { services } from "@/features/home/data/services";
-
-const railItems: ServiceRailItem[] = services.map((service) => ({
-  index: service.index,
-  category: service.category,
-  label: service.label,
-  description: service.description,
-  tags: service.tags,
-  visual: <ServiceVisual kind={service.visual} />,
-}));
+import { getPublicServices } from "@/features/services/data/publicServices";
 
 /**
  * CHAPTER 02 — the immersive scroll-driven progression. Reuses
@@ -33,21 +24,33 @@ const railItems: ServiceRailItem[] = services.map((service) => ({
  * motion) and spec §5 ("jump straight to a service"), without
  * touching `ServiceRail.tsx`.
  */
-export function ServiceProgression() {
+export async function ServiceProgression() {
+  const services = await getPublicServices();
+  const railItems: ServiceRailItem[] = services.map((service) => ({
+    index: service.index,
+    category: service.category,
+    label: service.label,
+    description: service.description,
+    tags: service.tags,
+    visual: <ServiceVisual kind={service.visual} image={service.image} label={service.label} />,
+  }));
+
   return (
     <section
       className="relative w-full"
       style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)" }}
     >
-      <div
-        style={{
-          ["--color-border" as string]: "var(--color-border-inverse)",
-          ["--color-surface-elevated" as string]: "var(--stz-navy-800)",
-          ["--color-text-secondary" as string]: "var(--color-muted-inverse)",
-        }}
-      >
-        <ServiceRail items={railItems} durationVhPerItem={0.9} />
-      </div>
+      {railItems.length > 0 && (
+        <div
+          style={{
+            ["--color-border" as string]: "var(--color-border-inverse)",
+            ["--color-surface-elevated" as string]: "var(--stz-navy-800)",
+            ["--color-text-secondary" as string]: "var(--color-muted-inverse)",
+          }}
+        >
+          <ServiceRail items={railItems} durationVhPerItem={0.9} />
+        </div>
+      )}
 
       <Container className="relative z-10 pb-28 pt-8">
         <span className="sr-only" id="all-services">

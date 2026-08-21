@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SmoothScrollProvider } from "@/components/layout/SmoothScrollProvider";
-import { ScrollLifecycle } from "@/components/layout/ScrollLifecycle";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -15,6 +11,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
 };
 
+/**
+ * Module 8 fix — this now only provides the document shell
+ * (`<html>/<body>` + skip-link) shared by every route, admin
+ * included. The public marketing chrome (Header/Footer/Lenis) that
+ * used to render here unconditionally now lives in
+ * `src/app/(site)/layout.tsx` instead, so it only wraps public
+ * routes — see that file's doc comment for why. `/admin/*` gets this
+ * shell plus its own `AdminLayout`, nothing else.
+ */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
@@ -25,14 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <SmoothScrollProvider>
-          <ScrollLifecycle />
-          <Header />
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </SmoothScrollProvider>
+        {children}
       </body>
     </html>
   );

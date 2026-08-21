@@ -1,18 +1,26 @@
 "use client";
 
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { HorizontalScroller } from "@/components/motion";
-import { team } from "@/features/home/data/team";
+import type { TeamMember } from "@/features/home/data/team";
 
 /**
  * CHAPTER 06 — Team. Vertical page scroll drives horizontal movement
  * through compact member cards (2.5–3 visible at once on desktop) using
  * the existing `HorizontalScroller` (Lenis + GSAP ScrollTrigger) — a
  * cinematic gallery, not a stack of oversized panels.
+ *
+ * Module 9H — `team` is now passed in from the Home page's CMS fetch
+ * instead of imported from the static data file. Renders nothing when
+ * there are no published members (spec §17), matching the established
+ * Home empty-state approach used for Services/Work.
  */
-export function TeamJourney() {
+export function TeamJourney({ team }: { team: TeamMember[] }) {
+  if (team.length === 0) return null;
+
   return (
     <section className="relative w-full" style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)" }}>
       <Container style={{ paddingTop: "var(--space-section)" }}>
@@ -39,13 +47,23 @@ export function TeamJourney() {
                 className="relative aspect-[5/4] w-full overflow-hidden rounded-[var(--radius-sm)]"
                 style={{ background: "linear-gradient(160deg, var(--stz-navy-700), var(--stz-blue-600))" }}
               >
-                <span
-                  className="absolute inset-0 flex items-center justify-center font-[var(--font-display)]"
-                  style={{ fontSize: "clamp(1.75rem, 3.4vw, 2.75rem)", color: "rgba(247,249,252,0.8)" }}
-                  aria-hidden
-                >
-                  {member.initials}
-                </span>
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 1024px) 29vw, (min-width: 640px) 42vw, 62vw"
+                  />
+                ) : (
+                  <span
+                    className="absolute inset-0 flex items-center justify-center font-[var(--font-display)]"
+                    style={{ fontSize: "clamp(1.75rem, 3.4vw, 2.75rem)", color: "rgba(247,249,252,0.8)" }}
+                    aria-hidden
+                  >
+                    {member.initials}
+                  </span>
+                )}
                 <span
                   className="absolute left-3 top-3 font-[var(--font-display)] tabular-nums"
                   style={{ fontSize: "var(--text-caption)", color: "rgba(247,249,252,0.6)" }}

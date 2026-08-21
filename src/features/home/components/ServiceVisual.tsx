@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ServiceItem } from "@/features/home/data/services";
 
 /**
@@ -5,8 +6,31 @@ import type { ServiceItem } from "@/features/home/data/services";
  * grids, nodes, and technical line-work rather than stock imagery, per
  * spec §11. One lightweight inline SVG per service kind; no per-item
  * Three.js scenes (keeps the pinned chapter cheap to render).
+ *
+ * Module 9N — accepts an optional CMS-uploaded `image` URL. When
+ * present it replaces the procedural mark inside the existing visual
+ * slot (same aspect ratio/frame); when absent the original SVG mark
+ * renders exactly as before, so services without an uploaded image
+ * are unaffected.
  */
-export function ServiceVisual({ kind }: { kind: ServiceItem["visual"] }) {
+export function ServiceVisual({ kind, image, label }: { kind: ServiceItem["visual"]; image?: string; label?: string }) {
+  if (image) {
+    return (
+      <div
+        className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)]"
+        style={{ background: "var(--stz-navy-950)", border: "1px solid var(--color-border-inverse)" }}
+      >
+        <Image
+          src={image}
+          alt={label ? `${label} illustration` : ""}
+          fill
+          className="object-cover"
+          sizes="(min-width: 1024px) 40vw, 90vw"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)]"

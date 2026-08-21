@@ -9,15 +9,31 @@ import { primaryNav, ctaRoute } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils/cn";
 import { syncHeaderHeightVar } from "@/lib/motion/headerHeight";
+import { logoutAction } from "@/features/auth/actions";
 
 /**
- * Premium, minimal navigation: transparent over the hero, gains a
- * translucent dark backdrop once the page scrolls past the first
- * viewport. The 6STANZA geometric mark is the primary brand element
- * (per spec §5/§16) rather than a wordmark. Mobile menu is a simple
- * slide-down panel reusing the existing nav config/primitives.
+ * Module 6 — session-aware auth state (spec §7). `authState` is
+ * resolved server-side once, in the root layout
+ * (`getCurrentProfile()` via `src/app/layout.tsx`), and passed down as
+ * a plain prop — `Header` itself stays a client component (it already
+ * needs client state for scroll/mobile-menu) but never fetches or
+ * subscribes to auth state on its own. This means the header's
+ * authenticated/anonymous state is only ever as fresh as the last full
+ * navigation: correct here because every auth action that changes it
+ * (`loginAction`, `logoutAction`) redirects on success, which is a
+ * real navigation and re-runs the root layout server-side — there's no
+ * case in this app where the session changes without one.
+ *
+ * Deliberately minimal per spec §7: display name (if any) + logout
+ * when authenticated, log in when not — no account dropdown, no role
+ * badge, no dashboard link (none exists yet).
  */
-export function Header() {
+export interface HeaderAuthState {
+  displayName: string | null;
+  isAdmin?: boolean;
+}
+
+export function Header({ authState }: { authState: HeaderAuthState | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -77,6 +93,42 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {authState ? (
+            <div className="hidden items-center gap-4 sm:flex">
+              <span
+                className="font-[var(--font-mono)] uppercase"
+                style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+              >
+                {authState.displayName ?? "Account"}
+              </span>
+              {authState.isAdmin ? (
+                <Link
+                  href="/admin"
+                  className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                >
+                  Admin
+                </Link>
+              ) : null}
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                >
+                  Log out
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)] sm:inline"
+              style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+            >
+              Log in
+            </Link>
+          )}
           <Link
             href={ctaRoute.href}
             className="hidden rounded-[var(--radius-pill)] px-5 py-2.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110 sm:inline-flex"
@@ -94,12 +146,30 @@ export function Header() {
         </div>
       </Container>
 
+      {/*
+        Mobile-auth patch: the panel previously capped at a fixed
+        `max-h-96` (384px) with `overflow-hidden`. With 6 primaryNav
+        links + the CTA button + this auth row, total content height
+        (~400-430px including padding) already exceeds that cap on most
+        phones — so Login/Logout was rendered in the DOM the whole
+        time, just visually clipped off the bottom of the panel. Fixed
+        by sizing the open state to the actual available viewport
+        height below the header instead of a guessed fixed number, and
+        switching `overflow-hidden` to `overflow-y-auto` so if content
+        ever exceeds even that (a very short viewport, or more nav
+        links added later), it scrolls into view instead of silently
+        clipping again.
+      */}
       <div
         className={cn(
-          "overflow-hidden transition-[max-height,opacity] duration-300 md:hidden",
-          mobileOpen ? "max-h-96 opacity-100" : "pointer-events-none max-h-0 opacity-0"
+          "overflow-y-auto transition-[max-height,opacity] duration-300 md:hidden",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
-        style={{ background: "rgba(5, 10, 20, 0.94)", backdropFilter: "blur(14px)" }}
+        style={{
+          background: "rgba(5, 10, 20, 0.94)",
+          backdropFilter: "blur(14px)",
+          maxHeight: mobileOpen ? "calc(100svh - var(--header-h))" : "0px",
+        }}
       >
         <Container className="flex flex-col gap-1 py-4">
           {primaryNav.map((route, i) => (
@@ -122,6 +192,36 @@ export function Header() {
           >
             {ctaRoute.label}
           </Link>
+          {authState?.isAdmin ? (
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="mt-3 flex items-center border-t py-3 font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+              style={{ fontSize: "var(--text-nav)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)", borderColor: "var(--color-border-inverse)" }}
+            >
+              Admin
+            </Link>
+          ) : null}
+          {authState ? (
+            <form action={logoutAction} className={cn("border-t", authState.isAdmin && "border-t-0")} style={{ borderColor: "var(--color-border-inverse)" }}>
+              <button
+                type="submit"
+                className="flex w-full items-center py-3 font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                style={{ fontSize: "var(--text-nav)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+              >
+                Log out{authState.displayName ? ` — ${authState.displayName}` : ""}
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="mt-3 flex items-center border-t py-3 font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+              style={{ fontSize: "var(--text-nav)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)", borderColor: "var(--color-border-inverse)" }}
+            >
+              Log in
+            </Link>
+          )}
         </Container>
       </div>
     </header>

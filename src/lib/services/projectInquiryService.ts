@@ -1,7 +1,15 @@
 import "server-only";
 
 import { projectInquirySchema } from "@/lib/validation/projectInquiry";
-import { insertProjectInquiry } from "@/lib/repositories/projectInquiries";
+import {
+  insertProjectInquiry,
+  listProjectInquiries,
+  getProjectInquiry,
+  updateProjectInquiryStatus,
+  type ProjectInquiryRow,
+} from "@/lib/repositories/projectInquiries";
+import type { InquiryStatus } from "@/lib/supabase/database.types";
+import type { AdminListResult, AdminGetResult, AdminUpdateResult } from "./contactInquiryService";
 
 export type SubmitProjectInquiryResult =
   | { ok: true }
@@ -46,5 +54,39 @@ export async function submitProjectInquiry(raw: unknown): Promise<SubmitProjectI
   } catch (error) {
     console.error("submitProjectInquiry: insert failed", error);
     return { ok: false, message: "Unable to submit your inquiry. Please try again." };
+  }
+}
+
+/** Module 7A — admin read path. Same rationale as `contactInquiryService`'s equivalents. */
+export async function listProjectInquiriesForAdmin(status?: InquiryStatus): Promise<AdminListResult<ProjectInquiryRow>> {
+  try {
+    const data = await listProjectInquiries(status);
+    return { ok: true, data };
+  } catch (error) {
+    console.error("listProjectInquiriesForAdmin: query failed", error);
+    return { ok: false, message: "Unable to load project inquiries. Please try again." };
+  }
+}
+
+export async function getProjectInquiryForAdmin(id: string): Promise<AdminGetResult<ProjectInquiryRow>> {
+  try {
+    const data = await getProjectInquiry(id);
+    return { ok: true, data };
+  } catch (error) {
+    console.error("getProjectInquiryForAdmin: query failed", error);
+    return { ok: false, message: "Unable to load this inquiry. Please try again." };
+  }
+}
+
+export async function updateProjectInquiryStatusForAdmin(
+  id: string,
+  status: InquiryStatus
+): Promise<AdminUpdateResult<ProjectInquiryRow>> {
+  try {
+    const data = await updateProjectInquiryStatus(id, status);
+    return { ok: true, data };
+  } catch (error) {
+    console.error("updateProjectInquiryStatusForAdmin: update failed", error);
+    return { ok: false, message: "Unable to update this inquiry's status. Please try again." };
   }
 }
