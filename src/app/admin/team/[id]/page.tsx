@@ -8,6 +8,7 @@ import { TeamMemberForm } from "@/features/admin/components/TeamMemberForm";
 import { ArchiveTeamMemberButton } from "@/features/admin/components/ArchiveTeamMemberButton";
 import { DeleteTeamMemberButton } from "@/features/admin/components/DeleteTeamMemberButton";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Edit Team Member" };
 
@@ -24,11 +25,7 @@ export default async function EditTeamMemberPage({ params }: { params: Promise<{
   const result = await getTeamMemberForAdmin(id);
 
   if (!result.ok) {
-    return (
-      <div role="alert" className="rounded-[var(--radius-lg)] border p-6" style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}>
-        {result.message}
-      </div>
-    );
+    return <AdminErrorState title="Unable to load this team member." message={result.message} />;
   }
 
   const member = result.data;

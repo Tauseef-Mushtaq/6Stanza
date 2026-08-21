@@ -6,6 +6,7 @@ import { getPublicMediaUrl } from "@/lib/cms/media";
 import type { ServiceRow } from "@/lib/repositories/services";
 import type { ServiceItem } from "@/features/home/data/services";
 import type { ServiceDetail } from "./serviceDetails";
+import type { PublicCollectionResult, PublicDetailResult } from "@/lib/utils/publicCms";
 
 /**
  * Module 9F — public data boundary for Services (spec §6/§25).
@@ -58,23 +59,26 @@ function toServiceDetail(row: ServiceRow): ServiceDetail {
  * runs per request no matter how many of those server components
  * render (spec §11/§21 — avoid duplicate queries).
  *
- * Returns `[]` on failure rather than throwing, so a transient CMS
- * error degrades to the public empty state instead of a hard crash
- * (spec §19).
+ * Module 10B (spec §4/§24) — previously returned `[]` on failure,
+ * which made "zero published services" and "the query failed"
+ * indistinguishable to every consumer. Now returns a
+ * `PublicCollectionResult` so callers can render the correct state
+ * (`EmptyState` vs `ErrorState`) instead of silently treating an
+ * infrastructure failure as "no services".
  */
-export const getPublicServiceRows = cache(async (): Promise<ServiceRow[]> => {
+export const getPublicServiceRows = cache(async (): Promise<PublicCollectionResult<ServiceRow>> => {
   const result = await getPublishedServices();
   if (!result.ok) {
     console.error("getPublicServiceRows: query failed:", result.message);
-    return [];
+    return { ok: false, data: [] };
   }
-  return result.data;
+  return { ok: true, data: result.data };
 });
 
-/** List shape for the home rail, services index hero/progression, and prev/next navigation. Order and `index` follow the CMS `sort_order` (already applied by the repository query). */
-export async function getPublicServices(): Promise<ServiceItem[]> {
+/** List shape for the home rail, services index hero/progression, and prev/next navigation. Order and `index` follow the CMS `sort_order` (already applied by the repository query). `ok: false` means the read failed — see `getPublicServiceRows`. */
+export async function getPublicServices(): Promise<PublicCollectionResult<ServiceItem>> {
   const rows = await getPublicServiceRows();
-  return rows.map((row, i) => toServiceItem(row, i + 1));
+  return { ok: rows.ok, data: rows.data.map((row, i) => toServiceItem(row, i + 1)) };
 }
 
 export interface PublicServiceDetailBundle {
@@ -85,20 +89,31 @@ export interface PublicServiceDetailBundle {
   next: ServiceItem;
 }
 
-/** Everything `/services/[slug]` needs for one published service, or `null` if the slug has no published match (caller should `notFound()`). */
-export async function getPublicServiceDetail(slug: string): Promise<PublicServiceDetailBundle | null> {
+/**
+ * Everything `/services/[slug]` needs for one published service.
+ * Module 10B (spec §10/§11) — distinguishes "no published service at
+ * this slug" (`not-found`, the caller should `notFound()`) from "the
+ * underlying read failed" (`error`, the caller must NOT 404 — that
+ * would misreport a database/network outage as a missing page).
+ */
+export async function getPublicServiceDetail(slug: string): Promise<PublicDetailResult<PublicServiceDetailBundle>> {
   const rows = await getPublicServiceRows();
-  const index = rows.findIndex((row) => row.slug === slug);
-  if (index === -1) return null;
+  if (!rows.ok) return { status: "error" };
 
-  const items = rows.map((row, i) => toServiceItem(row, i + 1));
+  const index = rows.data.findIndex((row) => row.slug === slug);
+  if (index === -1) return { status: "not-found" };
+
+  const items = rows.data.map((row, i) => toServiceItem(row, i + 1));
   const total = items.length;
 
   return {
-    service: items[index],
-    detail: toServiceDetail(rows[index]),
-    total,
-    prev: items[(index - 1 + total) % total],
-    next: items[(index + 1) % total],
+    status: "found",
+    value: {
+      service: items[index],
+      detail: toServiceDetail(rows.data[index]),
+      total,
+      prev: items[(index - 1 + total) % total],
+      next: items[(index + 1) % total],
+    },
   };
 }

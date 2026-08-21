@@ -7,6 +7,7 @@ import { ProjectStatusFilterTabs } from "@/features/admin/components/ProjectStat
 import { ProjectTable } from "@/features/admin/components/ProjectTable";
 import { contentStatusValues } from "@/features/admin/lib/services";
 import type { ContentStatus } from "@/lib/supabase/database.types";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Projects" };
 
@@ -58,13 +59,7 @@ export default async function AdminProjectsPage({
       <ProjectStatusFilterTabs active={status ?? "all"} />
 
       {!result.ok ? (
-        <div
-          role="alert"
-          className="rounded-[var(--radius-lg)] border p-6"
-          style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}
-        >
-          {result.message}
-        </div>
+        <AdminErrorState title="Unable to load projects." message={result.message} />
       ) : (
         <ProjectTable projects={result.data} filtered={status !== undefined} statusQuery={status ? `?status=${status}` : ""} />
       )}

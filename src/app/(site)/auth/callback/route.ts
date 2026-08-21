@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { safeRedirectPath } from "@/lib/utils/safeRedirect";
 
 /**
  * Standard Supabase SSR email-confirmation callback (spec §16). If the
@@ -17,7 +18,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const redirectTo = searchParams.get("redirect") ?? "/account";
+  // Module 10F — `redirect` is an attacker-controlled query param;
+  // validate it's an internal path before using it in a redirect,
+  // rather than trusting it verbatim (open-redirect fix).
+  const redirectTo = safeRedirectPath(searchParams.get("redirect"), "/account");
 
   if (code) {
     const supabase = await createSupabaseServerClient();

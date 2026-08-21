@@ -5,6 +5,7 @@ import { Reveal } from "@/components/motion";
 import { ServiceRail, type ServiceRailItem } from "@/features/experience/services/ServiceRail";
 import { ServiceVisual } from "@/features/home/components/ServiceVisual";
 import { getPublicServices } from "@/features/services/data/publicServices";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
 
 /**
  * CHAPTER 03 — the numbered/compass service progression (spec §10),
@@ -15,7 +16,7 @@ import { getPublicServices } from "@/features/services/data/publicServices";
  * visual per service.
  */
 export async function Services() {
-  const services = await getPublicServices();
+  const { ok, data: services } = await getPublicServices();
   const compassItems: ServiceRailItem[] = services.map((service) => ({
     index: service.index,
     category: service.category,
@@ -46,7 +47,17 @@ export async function Services() {
         </Reveal>
       </Container>
 
-      {compassItems.length > 0 ? (
+      {!ok ? (
+        // Module 10B (spec §6) — a failed Services read shows a
+        // controlled error in this chapter only; it does not take
+        // down the rest of Home.
+        <Container className="pb-24">
+          <PublicRetryState
+            title="We couldn't load our services right now"
+            description="Please try again."
+          />
+        </Container>
+      ) : compassItems.length > 0 ? (
         <div
           style={{
             // Re-tone the shared ServiceCompass primitive for this dark

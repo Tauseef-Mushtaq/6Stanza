@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
@@ -61,7 +62,16 @@ export default async function AccountPage() {
           </div>
         </dl>
 
-        <div>
+        <div className="flex flex-wrap items-center gap-4">
+          {profile?.role === "admin" ? (
+            <Link
+              href="/admin"
+              className="inline-flex items-center justify-center rounded-[var(--radius-pill)] px-7 py-3.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110"
+              style={{ background: "var(--color-brand)", color: "var(--stz-white)", fontSize: "var(--text-body)" }}
+            >
+              Go to Admin Dashboard
+            </Link>
+          ) : null}
           <LogoutButton />
         </div>
       </Container>

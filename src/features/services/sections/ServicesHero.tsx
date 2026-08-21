@@ -13,7 +13,7 @@ import { getPublicServices } from "@/features/services/data/publicServices";
  * brand mark, so it doesn't read as a copy.
  */
 export async function ServicesHero() {
-  const services = await getPublicServices();
+  const { data: services } = await getPublicServices();
 
   return (
     <section

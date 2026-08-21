@@ -7,6 +7,9 @@ import { HowWeWork } from "@/features/team/sections/HowWeWork";
 import { TeamCulture } from "@/features/team/sections/TeamCulture";
 import { TeamFinalTransition } from "@/features/team/sections/TeamFinalTransition";
 import { getPublicTeam } from "@/features/team/data/publicTeam";
+import { Container } from "@/components/ui/Container";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
 
 export const metadata: Metadata = {
   title: "Team",
@@ -22,11 +25,27 @@ export const metadata: Metadata = {
  * don't consume Team data and are left untouched.
  */
 export default async function TeamPage() {
-  const team = await getPublicTeam();
+  const { ok, data: team } = await getPublicTeam();
 
   return (
     <>
       <TeamHero team={team} />
+      {/* Module 10B (spec §15) — distinguishes a failed Team read
+          (controlled error, retry) from a genuinely empty published
+          collection (quiet empty message) rather than letting both
+          cases silently skip straight to TeamIntro. */}
+      {!ok ? (
+        <Container className="py-16">
+          <PublicRetryState
+            title="We couldn't load the team right now"
+            description="Please try again."
+          />
+        </Container>
+      ) : team.length === 0 ? (
+        <Container className="py-16">
+          <EmptyState title="No team members are currently available." />
+        </Container>
+      ) : null}
       <TeamIntro />
       <TeamSequence team={team} />
       <TeamFocus team={team} />

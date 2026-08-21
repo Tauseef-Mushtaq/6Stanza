@@ -8,6 +8,7 @@ import { InsightForm } from "@/features/admin/components/InsightForm";
 import { ArchiveInsightButton } from "@/features/admin/components/ArchiveInsightButton";
 import { DeleteInsightButton } from "@/features/admin/components/DeleteInsightButton";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Edit Insight" };
 
@@ -24,11 +25,7 @@ export default async function EditInsightPage({ params }: { params: Promise<{ id
   const result = await getInsightForAdmin(id);
 
   if (!result.ok) {
-    return (
-      <div role="alert" className="rounded-[var(--radius-lg)] border p-6" style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}>
-        {result.message}
-      </div>
-    );
+    return <AdminErrorState title="Unable to load this insight." message={result.message} />;
   }
 
   const insight = result.data;

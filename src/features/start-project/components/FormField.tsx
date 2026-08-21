@@ -36,7 +36,7 @@ function FieldWrapper({ label, htmlFor, optional, error, children }: FieldWrappe
       </label>
       {children}
       {error ? (
-        <p role="alert" style={{ color: "#ff6b6b", fontSize: "var(--text-caption)" }}>
+        <p id={`${htmlFor}-error`} role="alert" style={{ color: "#ff6b6b", fontSize: "var(--text-caption)" }}>
           {error}
         </p>
       ) : null}

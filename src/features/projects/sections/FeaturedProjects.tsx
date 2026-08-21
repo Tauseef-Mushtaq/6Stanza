@@ -4,6 +4,7 @@ import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { Divider } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
 import { getPublicProjects } from "@/features/projects/data/publicProjects";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
 
 /**
  * Deterministic technical visual per project — three distinct rendering
@@ -81,14 +82,22 @@ function ProjectVisual({ seed, accent, mode }: { seed: number; accent: number; m
  * entries look identical.
  */
 export async function FeaturedProjects() {
-  const projects = await getPublicProjects();
+  const { ok, data: projects } = await getPublicProjects();
 
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-4xl)" }}>
         <div className="flex flex-col">
           <Divider />
-          {projects.length === 0 ? (
+          {!ok ? (
+            // Module 10B (spec §12) — query failure, not zero rows.
+            <div className="py-16">
+              <PublicRetryState
+                title="We couldn't load our projects right now"
+                description="Please try again."
+              />
+            </div>
+          ) : projects.length === 0 ? (
             // Module 9G — empty state (spec §20): no fabricated
             // project content, no reintroduced static fallback.
             <p

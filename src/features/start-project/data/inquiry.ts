@@ -16,6 +16,14 @@ export interface ProjectInquiry {
   budget?: string;
   /** The open-ended brief — "What are you trying to make possible?" */
   message: string;
+  /**
+   * Module 10F — honeypot field. Hidden from real visitors (see
+   * `ProjectForm.tsx`); `projectInquirySchema`/`submitProjectInquiry`
+   * already reject/soft-accept anything that fills it in — this just
+   * finally wires a value into the request so that server-side check
+   * is reachable at all.
+   */
+  website?: string;
 }
 
 export const emptyInquiry: ProjectInquiry = {
@@ -28,6 +36,7 @@ export const emptyInquiry: ProjectInquiry = {
   timeline: undefined,
   budget: undefined,
   message: "",
+  website: "",
 };
 
 export type InquiryErrors = Partial<Record<keyof ProjectInquiry, string>>;

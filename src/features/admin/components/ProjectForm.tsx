@@ -306,8 +306,8 @@ export function ProjectForm({ project }: { project?: ProjectRow }) {
       {formError ? <ErrorText>{formError}</ErrorText> : null}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? "Saving…" : isEdit ? "Save changes" : "Create project"}
+        <Button type="submit" variant="primary" loading={pending}>
+          {isEdit ? "Save changes" : "Create project"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push("/admin/projects")} disabled={pending}>
           Cancel

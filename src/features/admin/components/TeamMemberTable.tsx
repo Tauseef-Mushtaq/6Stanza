@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
 import { ArchiveTeamMemberButton } from "@/features/admin/components/ArchiveTeamMemberButton";
 import type { TeamMemberRow } from "@/lib/repositories/teamMembers";
@@ -6,18 +7,6 @@ import type { TeamMemberRow } from "@/lib/repositories/teamMembers";
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
-/** Same "distinguish empty from filtered-empty" treatment as `ServiceTable.tsx`/`ProjectTable.tsx`'s `EmptyState`. */
-function EmptyState({ filtered }: { filtered: boolean }) {
-  return (
-    <div
-      className="rounded-[var(--radius-lg)] border p-10 text-center"
-      style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
-    >
-      {filtered ? "No team members match this status." : "No team members yet."}
-    </div>
-  );
 }
 
 /**
@@ -38,7 +27,22 @@ export function TeamMemberTable({
   statusQuery: string;
 }) {
   if (members.length === 0) {
-    return <EmptyState filtered={filtered} />;
+    return (
+      <EmptyState
+        title={filtered ? "No team members match this status." : "No team members found."}
+        action={
+          filtered ? undefined : (
+            <Link
+              href="/admin/team/new"
+              className="inline-flex items-center justify-center rounded-[var(--radius-pill)] px-5 py-2.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110 active:brightness-95"
+              style={{ fontSize: "var(--text-small)", background: "var(--color-brand)", color: "var(--stz-white)" }}
+            >
+              Add Team Member
+            </Link>
+          )
+        }
+      />
+    );
   }
 
   return (

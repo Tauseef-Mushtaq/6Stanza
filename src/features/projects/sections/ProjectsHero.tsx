@@ -13,7 +13,7 @@ import { getPublicProjects } from "@/features/projects/data/publicProjects";
  * family without being copies of each other.
  */
 export async function ProjectsHero() {
-  const projects = await getPublicProjects();
+  const { data: projects } = await getPublicProjects();
 
   return (
     <section

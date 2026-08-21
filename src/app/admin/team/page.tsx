@@ -7,6 +7,7 @@ import { TeamMemberStatusFilterTabs } from "@/features/admin/components/TeamMemb
 import { TeamMemberTable } from "@/features/admin/components/TeamMemberTable";
 import { contentStatusValues } from "@/features/admin/lib/services";
 import type { ContentStatus } from "@/lib/supabase/database.types";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -59,13 +60,7 @@ export default async function AdminTeamPage({
       <TeamMemberStatusFilterTabs active={status ?? "all"} />
 
       {!result.ok ? (
-        <div
-          role="alert"
-          className="rounded-[var(--radius-lg)] border p-6"
-          style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}
-        >
-          {result.message}
-        </div>
+        <AdminErrorState title="Unable to load team." message={result.message} />
       ) : (
         <TeamMemberTable members={result.data} filtered={status !== undefined} statusQuery={status ? `?status=${status}` : ""} />
       )}

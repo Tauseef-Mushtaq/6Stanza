@@ -10,6 +10,7 @@ import { ProjectGalleryManager } from "@/features/admin/components/ProjectGaller
 import { ArchiveProjectButton } from "@/features/admin/components/ArchiveProjectButton";
 import { DeleteProjectButton } from "@/features/admin/components/DeleteProjectButton";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Edit Project" };
 
@@ -26,11 +27,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
   const result = await getProjectForAdmin(id);
 
   if (!result.ok) {
-    return (
-      <div role="alert" className="rounded-[var(--radius-lg)] border p-6" style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}>
-        {result.message}
-      </div>
-    );
+    return <AdminErrorState title="Unable to load this project." message={result.message} />;
   }
 
   const project = result.data;

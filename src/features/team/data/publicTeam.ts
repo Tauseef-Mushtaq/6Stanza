@@ -5,6 +5,7 @@ import { getPublishedTeamMembers } from "@/lib/services/teamContentService";
 import { getPublicMediaUrl } from "@/lib/cms/media";
 import type { TeamMemberRow } from "@/lib/repositories/teamMembers";
 import type { TeamMember } from "@/features/home/data/team";
+import type { PublicCollectionResult } from "@/lib/utils/publicCms";
 
 /**
  * Module 9H — public data boundary for Team (spec §6/§9H).
@@ -72,21 +73,22 @@ function toTeamMember(row: TeamMemberRow): TeamMember {
  * one Supabase query actually runs per request no matter how many
  * server components read it (spec §13).
  *
- * Returns `[]` on failure rather than throwing, so a transient CMS
- * error degrades to the public empty state instead of a hard crash
- * (spec §16).
+ * Module 10B (spec §4/§16) — previously returned `[]` on failure,
+ * which made "zero published members" and "the query failed"
+ * indistinguishable to every consumer. Now returns a
+ * `PublicCollectionResult` so callers can render the correct state.
  */
-export const getPublicTeamRows = cache(async (): Promise<TeamMemberRow[]> => {
+export const getPublicTeamRows = cache(async (): Promise<PublicCollectionResult<TeamMemberRow>> => {
   const result = await getPublishedTeamMembers();
   if (!result.ok) {
     console.error("getPublicTeamRows: query failed:", result.message);
-    return [];
+    return { ok: false, data: [] };
   }
-  return result.data;
+  return { ok: true, data: result.data };
 });
 
-/** Published team members, CMS-ordered (`sort_order`, applied by the repository query) and mapped onto the existing `TeamMember` type. */
-export async function getPublicTeam(): Promise<TeamMember[]> {
+/** Published team members, CMS-ordered (`sort_order`, applied by the repository query) and mapped onto the existing `TeamMember` type. `ok: false` means the read failed. */
+export async function getPublicTeam(): Promise<PublicCollectionResult<TeamMember>> {
   const rows = await getPublicTeamRows();
-  return rows.map(toTeamMember);
+  return { ok: rows.ok, data: rows.data.map(toTeamMember) };
 }

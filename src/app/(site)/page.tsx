@@ -24,7 +24,7 @@ export default async function HomePage() {
       <Services />
       <SixSJourney />
       <Work />
-      <TeamJourney team={team} />
+      <TeamJourney team={team.data} teamOk={team.ok} />
       <FinalCta />
     </>
   );

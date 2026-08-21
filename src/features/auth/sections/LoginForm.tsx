@@ -26,12 +26,23 @@ interface FormState {
  * `?redirect=` (set by `middleware.ts` when an unauthenticated visitor
  * hits a protected route) rather than a hardcoded dashboard path.
  */
-export function LoginForm({ redirectTo }: { redirectTo: string }) {
+export function LoginForm({
+  redirectTo,
+  notice,
+}: {
+  redirectTo: string;
+  /** Safe, predefined message derived from `?error=`/`?reset=` on the page — see `LoginPage`'s `noticeFromParams`. */
+  notice?: { tone: "error" | "success"; message: string } | null;
+}) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>>>({});
   const [status, setStatus] = useState<Status>("idle");
   const [formError, setFormError] = useState<string | null>(null);
+  // Once the user submits, the outcome of *that* submit takes over the
+  // banner — an initial "confirmation failed" notice shouldn't still be
+  // showing after they've successfully signed in from the same page.
+  const [dismissedNotice, setDismissedNotice] = useState(false);
 
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -39,9 +50,11 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (status === "submitting") return;
     setStatus("submitting");
     setFormError(null);
     setFieldErrors({});
+    setDismissedNotice(true);
 
     const result = await signInAction(form);
 
@@ -73,6 +86,16 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         </Reveal>
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
+          {notice && !dismissedNotice ? (
+            notice.tone === "error" ? (
+              <ErrorText>{notice.message}</ErrorText>
+            ) : (
+              <p role="status" style={{ fontSize: "var(--text-small)", color: "var(--color-text-primary)" }}>
+                {notice.message}
+              </p>
+            )
+          ) : null}
+
           <FieldGroup>
             <Label htmlFor="email">Email</Label>
             <Input
@@ -105,7 +128,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
           {formError ? <ErrorText>{formError}</ErrorText> : null}
 
-          <Button type="submit" variant="primary" size="lg" disabled={status === "submitting"}>
+          <Button type="submit" variant="primary" size="lg" loading={status === "submitting"}>
             {status === "submitting" ? "Signing in…" : "Sign In"}
           </Button>
         </form>

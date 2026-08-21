@@ -286,8 +286,8 @@ export function ServiceForm({ service }: { service?: ServiceRow }) {
       {formError ? <ErrorText>{formError}</ErrorText> : null}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? "Saving…" : isEdit ? "Save changes" : "Create service"}
+        <Button type="submit" variant="primary" loading={pending}>
+          {isEdit ? "Save changes" : "Create service"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push("/admin/services")} disabled={pending}>
           Cancel

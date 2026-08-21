@@ -41,14 +41,17 @@ export function MediaUploadField({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
 
+  const busy = uploading || removing;
   const previewUrl = localPreview ?? buildPublicMediaUrl(bucket, value);
   const filename = value.split("/").pop();
 
   async function handleFile(file: File) {
+    if (busy) return;
     setError(null);
 
     // Instant client-side check for fast feedback — `uploadMediaAction`
@@ -107,14 +110,39 @@ export function MediaUploadField({
     if (file) void handleFile(file);
   }
 
-  function handleRemove() {
-    if (value) {
-      deleteMediaAction(bucket, value).catch(() => {
-        // Swallowed deliberately — see MODULE-9K-HANDOFF.md §K.
-      });
+  async function handleRemove() {
+    if (busy || !value) {
+      // Nothing stored yet (e.g. a failed upload never set `value`) —
+      // just clear any stale error, there's no Storage object to remove.
+      if (!value) {
+        onChange("");
+        setError(null);
+      }
+      return;
     }
-    onChange("");
+
     setError(null);
+    setRemoving(true);
+    const result = await deleteMediaAction(bucket, value);
+    setRemoving(false);
+
+    if (!result.ok) {
+      // Spec §9 — a failed removal must not falsely show the empty
+      // state: the stored `value` (and therefore the preview) is left
+      // untouched, and the administrator sees a safe, retryable error.
+      //
+      // `deleteMediaAction`'s failure message is written for its other
+      // caller (best-effort cleanup of the *previous* file during a
+      // Replace, where "your change was saved" is accurate — see
+      // `handleFile` below and `storage.ts`'s `removeObject` comment).
+      // For this primary, user-initiated Remove action nothing has
+      // been saved yet, so that wording would be misleading here —
+      // use a message accurate to this action instead.
+      setError("Unable to remove this image. Please try again.");
+      return;
+    }
+
+    onChange("");
   }
 
   return (
@@ -135,26 +163,27 @@ export function MediaUploadField({
           />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="truncate" style={{ fontSize: "var(--text-small)", color: "var(--color-text-primary)" }}>
-              {uploading ? "Uploading…" : (filename ?? "Image")}
+              {uploading ? "Uploading…" : removing ? "Removing…" : (filename ?? "Image")}
             </span>
-            {!uploading && value ? (
+            {!busy && value ? (
               <span className="truncate" style={{ fontSize: "var(--text-caption)", color: "var(--color-text-muted)" }}>
                 {value}
               </span>
             ) : null}
             <div className="mt-1 flex items-center gap-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
+              <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
                 Replace
               </Button>
               <button
                 type="button"
                 onClick={handleRemove}
-                disabled={uploading}
+                disabled={busy}
                 aria-label={`Remove ${label.toLowerCase()}`}
+                aria-busy={removing}
                 className="underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ fontSize: "var(--text-caption)", color: "var(--color-error)" }}
               >
-                Remove
+                {removing ? "Removing…" : "Remove"}
               </button>
             </div>
           </div>
@@ -176,7 +205,7 @@ export function MediaUploadField({
           <span style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}>
             {uploading ? "Uploading…" : "Drag an image here, or"}
           </span>
-          <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
+          <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
             Choose Image
           </Button>
           <span style={{ fontSize: "var(--text-caption)", color: "var(--color-text-muted)" }}>JPG, PNG, WebP, or SVG · up to 5MB</span>

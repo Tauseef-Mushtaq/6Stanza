@@ -43,6 +43,7 @@ export function SignupForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (status === "submitting") return;
     setStatus("submitting");
     setFormError(null);
     setFieldErrors({});
@@ -147,7 +148,7 @@ export function SignupForm() {
 
           {formError ? <ErrorText>{formError}</ErrorText> : null}
 
-          <Button type="submit" variant="primary" size="lg" disabled={status === "submitting"}>
+          <Button type="submit" variant="primary" size="lg" loading={status === "submitting"}>
             {status === "submitting" ? "Creating account…" : "Create Account"}
           </Button>
         </form>

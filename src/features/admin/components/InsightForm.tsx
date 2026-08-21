@@ -276,8 +276,8 @@ export function InsightForm({ insight }: { insight?: InsightRow }) {
       {formError ? <ErrorText>{formError}</ErrorText> : null}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? "Saving…" : isEdit ? "Save changes" : "Create insight"}
+        <Button type="submit" variant="primary" loading={pending}>
+          {isEdit ? "Save changes" : "Create insight"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push("/admin/insights")} disabled={pending}>
           Cancel

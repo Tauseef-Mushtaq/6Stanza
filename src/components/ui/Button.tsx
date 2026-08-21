@@ -8,6 +8,13 @@ interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
   as?: React.ElementType;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /**
+   * Module 10A (spec §6) — marks a pending mutation. Disables the
+   * button (in addition to `disabled`) and swaps in a small inline
+   * spinner before `children`, without changing variant/size/typography
+   * or any existing consumer that doesn't pass this prop.
+   */
+  loading?: boolean;
 }
 
 const SIZE_STYLES: Record<ButtonSize, string> = {
@@ -70,13 +77,15 @@ const VARIANT_HOVER_CLASS: Record<ButtonVariant, string> = {
  * hover/press choreography belongs to later motion modules.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { as = "button", variant = "primary", size = "md", className, style, children, ...props },
+  { as = "button", variant = "primary", size = "md", className, style, children, loading = false, disabled, "aria-busy": ariaBusy, ...props },
   ref
 ) {
   return createElement(
     as,
     {
       ref,
+      disabled: disabled || loading,
+      "aria-busy": loading || ariaBusy,
       className: cn(
         "inline-flex items-center justify-center rounded-[var(--radius-pill)] font-[var(--font-sans)] font-medium",
         "transition-[filter,opacity,color,border-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-standard)]",
@@ -94,6 +103,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       },
       ...props,
     },
-    children
+    loading ? (
+      <>
+        <span
+          aria-hidden="true"
+          className="inline-block shrink-0 animate-spin rounded-full"
+          style={{ width: "1em", height: "1em", border: "2px solid currentColor", borderTopColor: "transparent", opacity: 0.6, marginRight: "0.5em" }}
+        />
+        {children}
+      </>
+    ) : (
+      children
+    )
   );
 });

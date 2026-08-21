@@ -4,6 +4,7 @@ import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, Divider } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
 import { getPublicProjects } from "@/features/projects/data/publicProjects";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
 
 /**
  * CHAPTER 05 — large editorial project presentations (spec §13), not a
@@ -76,7 +77,7 @@ function ProjectDiagram({ seed, accent }: { seed: number; accent: number }) {
 }
 
 export async function Work() {
-  const projects = await getPublicProjects();
+  const { ok, data: projects } = await getPublicProjects();
 
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
@@ -97,7 +98,16 @@ export async function Work() {
 
         <div className="mt-10 flex flex-col">
           <Divider />
-          {projects.length === 0 ? (
+          {!ok ? (
+            // Module 10B (spec §6) — a failed Projects read shows a
+            // controlled error in this chapter only.
+            <div className="py-16">
+              <PublicRetryState
+                title="We couldn't load our work right now"
+                description="Please try again."
+              />
+            </div>
+          ) : projects.length === 0 ? (
             // Module 9G — empty state (spec §17): preserve the section
             // composition, no fabricated content, no static fallback.
             <p

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicProjectDetail } from "@/features/projects/data/publicProjects";
+import { throwPublicCmsError } from "@/lib/utils/publicCms";
 import { ProjectDetailHero } from "@/features/projects/sections/ProjectDetailHero";
 import { ProjectOverview } from "@/features/projects/sections/ProjectOverview";
 import { ProjectChallenge } from "@/features/projects/sections/ProjectChallenge";
@@ -31,10 +32,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const result = await getPublicProjectDetail(slug);
-  if (!result) return {};
+  // Module 10B (spec §18) — a query failure must not fabricate
+  // metadata; the page body's own read throws and hits the safe
+  // error boundary, so metadata just degrades to empty here.
+  if (result.status !== "found") return {};
   return {
-    title: result.project.title,
-    description: result.project.description,
+    title: result.value.project.title,
+    description: result.value.project.description,
   };
 }
 
@@ -49,9 +53,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const result = await getPublicProjectDetail(slug);
-  if (!result) notFound();
+  // Module 10B (spec §13) — a query failure must never be reported as
+  // a 404; only "not-found" (no published project at this slug) does.
+  if (result.status === "error") throwPublicCmsError("We couldn't load this project right now. Please try again.");
+  if (result.status === "not-found") notFound();
 
-  const { project, detail, index, total, prev, next } = result;
+  const { project, detail, index, total, prev, next } = result.value;
 
   return (
     <>

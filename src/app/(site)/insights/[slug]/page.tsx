@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicInsightBySlug, getNextPublicInsight } from "@/features/insights/data/publicInsights";
+import { throwPublicCmsError } from "@/lib/utils/publicCms";
 import { ArticleHero } from "@/features/insights/sections/ArticleHero";
 import { ArticleIntro } from "@/features/insights/sections/ArticleIntro";
 import { ArticleContent } from "@/features/insights/sections/ArticleContent";
@@ -19,11 +20,14 @@ interface PageProps {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const insight = await getPublicInsightBySlug(slug);
-  if (!insight) return {};
+  const result = await getPublicInsightBySlug(slug);
+  // Module 10B (spec §18) — a query failure must not fabricate
+  // metadata or claim the article doesn't exist; the page body's own
+  // read throws and hits the safe error boundary.
+  if (result.status !== "found") return {};
   return {
-    title: insight.title,
-    description: insight.excerpt,
+    title: result.value.title,
+    description: result.value.excerpt,
   };
 }
 
@@ -38,11 +42,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * `react.cache()`-memoized reads (`publicInsights.ts`), so this page
  * and `generateMetadata` above share the same underlying Supabase
  * query within one request rather than issuing it twice.
+ *
+ * Module 10B (spec §18) — a query failure must never be reported as a
+ * 404; only "not-found" (no published article at this slug) does.
  */
 export default async function InsightDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const insight = await getPublicInsightBySlug(slug);
-  if (!insight) notFound();
+  const result = await getPublicInsightBySlug(slug);
+  if (result.status === "error") throwPublicCmsError("We couldn't load this article right now. Please try again.");
+  if (result.status === "not-found") notFound();
+
+  const insight = result.value;
 
   // Wraps around to itself when there's exactly one published insight,
   // matching the old static array's `(index + 1) % insights.length`

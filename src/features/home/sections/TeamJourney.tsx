@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { HorizontalScroller } from "@/components/motion";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
 import type { TeamMember } from "@/features/home/data/team";
 
 /**
@@ -17,8 +18,33 @@ import type { TeamMember } from "@/features/home/data/team";
  * instead of imported from the static data file. Renders nothing when
  * there are no published members (spec §17), matching the established
  * Home empty-state approach used for Services/Work.
+ *
+ * Module 10B (spec §6/§8) — `teamOk` distinguishes "the read failed"
+ * from "zero published members": a failure shows a controlled error
+ * in this chapter only, rather than silently disappearing like the
+ * empty case does.
  */
-export function TeamJourney({ team }: { team: TeamMember[] }) {
+export function TeamJourney({ team, teamOk = true }: { team: TeamMember[]; teamOk?: boolean }) {
+  if (!teamOk) {
+    return (
+      <section className="relative w-full" style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)" }}>
+        <Container style={{ paddingBlock: "var(--space-section)" }}>
+          <div className="flex items-center gap-3">
+            <AccentLine />
+            <TechnicalLabel style={{ color: "var(--color-brand-soft)" }}>06 — Team</TechnicalLabel>
+          </div>
+          <div className="mt-8">
+            <PublicRetryState
+              title="We couldn't load the team right now"
+              description="Please try again."
+              className="border-[var(--color-border-inverse)]"
+            />
+          </div>
+        </Container>
+      </section>
+    );
+  }
+
   if (team.length === 0) return null;
 
   return (

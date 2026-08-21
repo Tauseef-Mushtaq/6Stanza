@@ -8,6 +8,7 @@ import { ServiceForm } from "@/features/admin/components/ServiceForm";
 import { ArchiveServiceButton } from "@/features/admin/components/ArchiveServiceButton";
 import { DeleteServiceButton } from "@/features/admin/components/DeleteServiceButton";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
+import { AdminErrorState } from "@/features/admin/components/AdminErrorState";
 
 export const metadata: Metadata = { title: "Edit Service" };
 
@@ -24,11 +25,7 @@ export default async function EditServicePage({ params }: { params: Promise<{ id
   const result = await getServiceForAdmin(id);
 
   if (!result.ok) {
-    return (
-      <div role="alert" className="rounded-[var(--radius-lg)] border p-6" style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}>
-        {result.message}
-      </div>
-    );
+    return <AdminErrorState title="Unable to load this service." message={result.message} />;
   }
 
   const service = result.data;

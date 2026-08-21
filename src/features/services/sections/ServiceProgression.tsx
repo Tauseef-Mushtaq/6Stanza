@@ -6,6 +6,8 @@ import { Reveal } from "@/components/motion";
 import { ServiceRail, type ServiceRailItem } from "@/features/experience/services/ServiceRail";
 import { ServiceVisual } from "@/features/home/components/ServiceVisual";
 import { getPublicServices } from "@/features/services/data/publicServices";
+import { PublicRetryState } from "@/components/ui/PublicRetryState";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 /**
  * CHAPTER 02 — the immersive scroll-driven progression. Reuses
@@ -25,7 +27,7 @@ import { getPublicServices } from "@/features/services/data/publicServices";
  * touching `ServiceRail.tsx`.
  */
 export async function ServiceProgression() {
-  const services = await getPublicServices();
+  const { ok, data: services } = await getPublicServices();
   const railItems: ServiceRailItem[] = services.map((service) => ({
     index: service.index,
     category: service.category,
@@ -56,6 +58,21 @@ export async function ServiceProgression() {
         <span className="sr-only" id="all-services">
           All services
         </span>
+        {!ok ? (
+          // Module 10B (spec §9) — query failure, not zero rows: show
+          // a controlled error with retry rather than an empty list.
+          <PublicRetryState
+            title="We couldn't load our services right now"
+            description="Please try again."
+          />
+        ) : services.length === 0 ? (
+          // Module 10B (spec §9) — genuinely zero published services;
+          // avoids rendering a silently empty <nav>.
+          <EmptyState
+            title="No services are currently available."
+            style={{ borderColor: "var(--color-border-inverse)", color: "var(--color-muted-inverse)" }}
+          />
+        ) : (
         <nav aria-labelledby="all-services" className="flex flex-col">
           <Divider style={{ background: "var(--color-border-inverse)" }} />
           {services.map((service, i) => (
@@ -91,6 +108,7 @@ export async function ServiceProgression() {
             </Reveal>
           ))}
         </nav>
+        )}
       </Container>
     </section>
   );

@@ -46,10 +46,10 @@ export function ArchiveInsightButton({ id, alreadyArchived }: { id: string; alre
         variant="outline"
         size="sm"
         onClick={handleClick}
-        disabled={pending}
+        loading={pending}
         style={confirming ? { borderColor: "var(--color-error)", color: "var(--color-error)" } : undefined}
       >
-        {pending ? "Archiving…" : confirming ? "Confirm archive" : "Archive"}
+        {confirming ? "Confirm archive" : "Archive"}
       </Button>
       {confirming && !pending ? (
         <button

@@ -229,8 +229,8 @@ export function TeamMemberForm({ member }: { member?: TeamMemberRow }) {
       {formError ? <ErrorText>{formError}</ErrorText> : null}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? "Saving…" : isEdit ? "Save changes" : "Create team member"}
+        <Button type="submit" variant="primary" loading={pending}>
+          {isEdit ? "Save changes" : "Create team member"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push("/admin/team")} disabled={pending}>
           Cancel

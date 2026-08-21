@@ -49,6 +49,33 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "8mb",
     },
   },
+  /**
+   * Module 10F — baseline security headers (spec: "audit response
+   * headers for anything missing"). Applied to every route, admin
+   * included, since these are safe defaults with no known conflict
+   * with GSAP/Lenis/R3F/Supabase/next/image.
+   *
+   * Deliberately NOT adding a `Content-Security-Policy` here — this
+   * app inlines styles/scripts in a few places (React inline styles,
+   * Next's own hydration script) and a CSP written without the
+   * ability to actually load the site in a browser to verify against
+   * real console violations is more likely to silently break the app
+   * than to add real protection. Flagged in the handoff as follow-up
+   * work for whoever has a live environment to iterate a CSP against.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

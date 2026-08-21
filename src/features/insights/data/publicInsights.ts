@@ -5,6 +5,7 @@ import { getPublishedInsights, getPublishedInsight } from "@/lib/services/insigh
 import { insightBlockSchema } from "@/lib/validation/cmsContent";
 import type { InsightRow } from "@/lib/repositories/insights";
 import type { Insight, InsightBlock } from "@/features/insights/data/insights";
+import type { PublicCollectionResult, PublicDetailResult } from "@/lib/utils/publicCms";
 
 /**
  * Module 9I — public data boundary for Insights (spec §6/§9I).
@@ -70,40 +71,43 @@ function toInsight(row: InsightRow): Insight {
  * memoizing here means only one Supabase query runs per request no
  * matter how many server components read it (spec §11/§27).
  *
- * Returns `[]` on failure rather than throwing, so a transient CMS
- * error degrades to the public empty state instead of a hard crash
- * (spec §23).
+ * Module 10B (spec §4/§23) — previously returned `[]` on failure,
+ * which made "zero published insights" and "the query failed"
+ * indistinguishable to every consumer. Now returns a
+ * `PublicCollectionResult` so callers can render the correct state.
  */
-export const getPublicInsightRows = cache(async (): Promise<InsightRow[]> => {
+export const getPublicInsightRows = cache(async (): Promise<PublicCollectionResult<InsightRow>> => {
   const result = await getPublishedInsights();
   if (!result.ok) {
     console.error("getPublicInsightRows: query failed:", result.message);
-    return [];
+    return { ok: false, data: [] };
   }
-  return result.data;
+  return { ok: true, data: result.data };
 });
 
-/** Published insights, CMS-ordered (`published_at DESC`, applied by the repository query) and mapped onto the existing `Insight` type. */
-export async function getPublicInsights(): Promise<Insight[]> {
+/** Published insights, CMS-ordered (`published_at DESC`, applied by the repository query) and mapped onto the existing `Insight` type. `ok: false` means the read failed. */
+export async function getPublicInsights(): Promise<PublicCollectionResult<Insight>> {
   const rows = await getPublicInsightRows();
-  return rows.map(toInsight);
+  return { ok: rows.ok, data: rows.data.map(toInsight) };
 }
 
 /**
  * Request-memoized published-insight-by-slug read, used by
  * `/insights/[slug]` (spec §11 — prefer the by-slug query over
- * fetching the whole list for a single article). A slug with no
- * published match (draft, archived, or unknown — indistinguishable
- * from the public boundary's perspective, spec §10) returns `null`;
- * the caller is responsible for `notFound()`.
+ * fetching the whole list for a single article).
+ *
+ * Module 10B (spec §10/§18) — distinguishes "no published match for
+ * this slug" (`not-found`, draft/archived/unknown are indistinguishable
+ * from this boundary) from "the underlying read failed" (`error`); the
+ * caller must only `notFound()` on the former.
  */
-export const getPublicInsightBySlug = cache(async (slug: string): Promise<Insight | null> => {
+export const getPublicInsightBySlug = cache(async (slug: string): Promise<PublicDetailResult<Insight>> => {
   const result = await getPublishedInsight(slug);
   if (!result.ok) {
     console.error("getPublicInsightBySlug: query failed:", result.message);
-    return null;
+    return { status: "error" };
   }
-  return result.data ? toInsight(result.data) : null;
+  return result.data ? { status: "found", value: toInsight(result.data) } : { status: "not-found" };
 });
 
 /**
@@ -111,12 +115,16 @@ export const getPublicInsightBySlug = cache(async (slug: string): Promise<Insigh
  * the end of the CMS-ordered, published-only collection — same
  * wraparound semantics the old static-array `(index + 1) % insights.length`
  * had, now computed from `getPublicInsightRows()` so it can never
- * point at a draft/archived article.
+ * point at a draft/archived article. Returns `null` when the rows
+ * read itself failed or the collection is empty/slug unmatched — the
+ * caller (`ArticleFooter`) already falls back to the current article
+ * in that case (spec §B), which is the correct degrade for this
+ * optional "what's next" affordance.
  */
 export async function getNextPublicInsight(slug: string): Promise<Insight | null> {
   const rows = await getPublicInsightRows();
-  if (rows.length === 0) return null;
-  const index = rows.findIndex((row) => row.slug === slug);
+  if (!rows.ok || rows.data.length === 0) return null;
+  const index = rows.data.findIndex((row) => row.slug === slug);
   if (index === -1) return null;
-  return toInsight(rows[(index + 1) % rows.length]);
+  return toInsight(rows.data[(index + 1) % rows.data.length]);
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ContentStatusBadge } from "@/features/admin/components/ContentStatusBadge";
 import { ArchiveInsightButton } from "@/features/admin/components/ArchiveInsightButton";
 import type { InsightRow } from "@/lib/repositories/insights";
@@ -6,18 +7,6 @@ import type { InsightRow } from "@/lib/repositories/insights";
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-}
-
-/** Same "distinguish empty from filtered-empty" treatment as `TeamMemberTable.tsx`'s `EmptyState`. */
-function EmptyState({ filtered }: { filtered: boolean }) {
-  return (
-    <div
-      className="rounded-[var(--radius-lg)] border p-10 text-center"
-      style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
-    >
-      {filtered ? "No insights match this status." : "No insights yet."}
-    </div>
-  );
 }
 
 /**
@@ -40,7 +29,22 @@ export function InsightTable({
   statusQuery: string;
 }) {
   if (insights.length === 0) {
-    return <EmptyState filtered={filtered} />;
+    return (
+      <EmptyState
+        title={filtered ? "No insights match this status." : "No insights found."}
+        action={
+          filtered ? undefined : (
+            <Link
+              href="/admin/insights/new"
+              className="inline-flex items-center justify-center rounded-[var(--radius-pill)] px-5 py-2.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110 active:brightness-95"
+              style={{ fontSize: "var(--text-small)", background: "var(--color-brand)", color: "var(--stz-white)" }}
+            >
+              Create Insight
+            </Link>
+          )
+        }
+      />
+    );
   }
 
   return (

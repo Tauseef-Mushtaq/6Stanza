@@ -40,9 +40,20 @@ export async function resetPasswordAction(input: ResetPasswordInput): Promise<Au
  * authentication"): `signOut()` invalidates the session server-side,
  * and this redirects afterward so there's no intermediate render of a
  * stale authenticated page.
+ *
+ * Previously this discarded `signOut()`'s result and always redirected
+ * to `/` as if it had succeeded — a real failure (network error talking
+ * to Supabase, etc.) was logged server-side and otherwise invisible to
+ * the user. On failure this now redirects to the existing
+ * `/login?error=` safe-message channel (the same one `/auth/callback`
+ * uses) instead of silently pretending the sign-out worked; the
+ * success path/destination is unchanged.
  */
 export async function signOutAction(): Promise<void> {
-  await signOut();
+  const result = await signOut();
+  if (!result.ok) {
+    redirect("/login?error=sign_out_failed");
+  }
   redirect("/");
 }
 

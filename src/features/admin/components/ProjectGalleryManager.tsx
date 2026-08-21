@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Loader } from "@/components/ui/Loader";
 import { Label, ErrorText, HelperText } from "@/components/ui/form/Field";
 import {
   addProjectGalleryImageAction,
@@ -33,6 +34,12 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Distinguishes *which* pending operation is running so the status
+  // text below can say "Saving order…" vs "Removing image…" instead of
+  // one generic label — spec §18/§19's "Saving order..." /
+  // "Removing..." states are otherwise indistinguishable from each
+  // other since both share the same `pending` flag.
+  const [pendingAction, setPendingAction] = useState<"remove" | "reorder" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFiles(files: FileList) {
@@ -47,6 +54,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     // already-successful uploads because one file failed; clearly
     // identify failures").
     setUploading(true);
+    let successCount = 0;
     const failures: string[] = [];
     for (const file of fileArray) {
       const clientCheck = validateImageFile({ type: file.type, size: file.size });
@@ -59,6 +67,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
       formData.set("file", file);
       const result = await addProjectGalleryImageAction(projectId, formData);
       if (result.ok) {
+        successCount += 1;
         setMedia((prev) => [...prev, result.data]);
       } else {
         failures.push(`${file.name}: ${result.message}`);
@@ -67,7 +76,13 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     setUploading(false);
 
     if (failures.length > 0) {
-      setError(failures.join(" "));
+      // Spec §14/§16 — report both sides of a partial failure, not just
+      // the failure list: "3 images uploaded. 1 image failed..." makes
+      // it clear the successes were kept, not silently lost alongside
+      // the one that failed.
+      const successPrefix = successCount > 0 ? `${successCount} image${successCount === 1 ? "" : "s"} uploaded. ` : "";
+      const failureLabel = failures.length === 1 ? "1 image failed to upload: " : `${failures.length} images failed to upload: `;
+      setError(`${successPrefix}${failureLabel}${failures.join(" ")}`);
     }
   }
 
@@ -79,13 +94,16 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
 
   function handleRemove(id: string) {
     setError(null);
+    setPendingAction("remove");
     startTransition(async () => {
       const result = await removeProjectGalleryImageAction(projectId, id);
       if (!result.ok) {
         setError(result.message);
+        setPendingAction(null);
         return;
       }
       setMedia((prev) => prev.filter((row) => row.id !== id));
+      setPendingAction(null);
     });
   }
 
@@ -96,15 +114,18 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     const reordered = [...media];
     [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
     setMedia(reordered);
+    setPendingAction("reorder");
 
     startTransition(async () => {
       const result = await reorderProjectGalleryAction(projectId, reordered.map((row) => row.id));
       if (!result.ok) {
         setError(result.message);
         setMedia(media); // revert to the last known-good order
+        setPendingAction(null);
         return;
       }
       setMedia(result.data);
+      setPendingAction(null);
     });
   }
 
@@ -128,7 +149,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
                     <button
                       type="button"
                       onClick={() => move(index, -1)}
-                      disabled={index === 0 || pending}
+                      disabled={index === 0 || pending || uploading}
                       aria-label="Move image earlier"
                       className="disabled:cursor-not-allowed disabled:opacity-30"
                       style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
@@ -138,7 +159,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
                     <button
                       type="button"
                       onClick={() => move(index, 1)}
-                      disabled={index === media.length - 1 || pending}
+                      disabled={index === media.length - 1 || pending || uploading}
                       aria-label="Move image later"
                       className="disabled:cursor-not-allowed disabled:opacity-30"
                       style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
@@ -149,8 +170,9 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
                   <button
                     type="button"
                     onClick={() => handleRemove(item.id)}
-                    disabled={pending}
+                    disabled={pending || uploading}
                     aria-label="Remove image"
+                    aria-busy={pending && pendingAction === "remove"}
                     className="underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ fontSize: "var(--text-caption)", color: "var(--color-error)" }}
                   >
@@ -161,11 +183,22 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
             );
           })}
         </ul>
+      ) : (
+        // Spec §21 — a small gallery-specific empty presentation rather
+        // than the generic CMS-table `EmptyState`, which would look
+        // oversized inside this compact editor card.
+        <p style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}>
+          No gallery images yet. Upload images to build this project&apos;s gallery.
+        </p>
+      )}
+
+      {pending && pendingAction ? (
+        <Loader size="sm" label={pendingAction === "reorder" ? "Saving order…" : "Removing image…"} showLabel />
       ) : null}
 
       <div>
-        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
-          {uploading ? "Uploading…" : "Upload images"}
+        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading || pending}>
+          {uploading ? "Uploading images…" : "Upload images"}
         </Button>
         <input
           ref={inputRef}

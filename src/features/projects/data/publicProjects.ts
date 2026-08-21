@@ -7,6 +7,7 @@ import { getPublicMediaUrl } from "@/lib/cms/media";
 import type { ProjectRow } from "@/lib/repositories/projects";
 import type { ProjectItem } from "@/features/home/data/projects";
 import type { ArchitectureGroup, ProjectDetail, ProjectGalleryImage } from "./projectDetails";
+import type { PublicCollectionResult, PublicDetailResult } from "@/lib/utils/publicCms";
 
 /**
  * Module 9G — public data boundary for Projects (spec §6/§30), same
@@ -108,23 +109,24 @@ async function getProjectGalleryImages(row: ProjectRow): Promise<ProjectGalleryI
  * request regardless of how many server components consume it
  * (spec §11/§26).
  *
- * Returns `[]` on failure rather than throwing, so a transient CMS
- * error degrades to the public empty state instead of a hard crash
- * (spec §24).
+ * Module 10B (spec §4/§24) — previously returned `[]` on failure,
+ * which made "zero published projects" and "the query failed"
+ * indistinguishable to every consumer. Now returns a
+ * `PublicCollectionResult` so callers can render the correct state.
  */
-export const getPublicProjectRows = cache(async (): Promise<ProjectRow[]> => {
+export const getPublicProjectRows = cache(async (): Promise<PublicCollectionResult<ProjectRow>> => {
   const result = await getPublishedProjects();
   if (!result.ok) {
     console.error("getPublicProjectRows: query failed:", result.message);
-    return [];
+    return { ok: false, data: [] };
   }
-  return result.data;
+  return { ok: true, data: result.data };
 });
 
-/** List shape for the Projects index hero/featured list and the Home Work section. Order follows CMS `sort_order` (already applied by the repository query). */
-export async function getPublicProjects(): Promise<ProjectItem[]> {
+/** List shape for the Projects index hero/featured list and the Home Work section. Order follows CMS `sort_order` (already applied by the repository query). `ok: false` means the read failed. */
+export async function getPublicProjects(): Promise<PublicCollectionResult<ProjectItem>> {
   const rows = await getPublicProjectRows();
-  return rows.map(toProjectItem);
+  return { ok: rows.ok, data: rows.data.map(toProjectItem) };
 }
 
 export interface PublicProjectDetailBundle {
@@ -136,24 +138,36 @@ export interface PublicProjectDetailBundle {
   next: ProjectItem;
 }
 
-/** Everything `/projects/[slug]` needs for one published project, or `null` if the slug has no published match (caller should `notFound()`). */
-export async function getPublicProjectDetail(slug: string): Promise<PublicProjectDetailBundle | null> {
+/**
+ * Everything `/projects/[slug]` needs for one published project.
+ * Module 10B (spec §13) — distinguishes "no published project at this
+ * slug" (`not-found`) from "the underlying read failed" (`error`); the
+ * gallery sub-read (`getProjectGalleryImages`) is intentionally left
+ * degrading to `[]` on failure (spec §14 — an optional gallery outage
+ * must not take down the whole project page).
+ */
+export async function getPublicProjectDetail(slug: string): Promise<PublicDetailResult<PublicProjectDetailBundle>> {
   const rows = await getPublicProjectRows();
-  const rowIndex = rows.findIndex((row) => row.slug === slug);
-  if (rowIndex === -1) return null;
+  if (!rows.ok) return { status: "error" };
 
-  const items = rows.map(toProjectItem);
+  const rowIndex = rows.data.findIndex((row) => row.slug === slug);
+  if (rowIndex === -1) return { status: "not-found" };
+
+  const items = rows.data.map(toProjectItem);
   const total = items.length;
-  const row = rows[rowIndex];
+  const row = rows.data[rowIndex];
 
   const gallery = await getProjectGalleryImages(row);
 
   return {
-    project: items[rowIndex],
-    detail: toProjectDetail(row, gallery),
-    index: rowIndex + 1,
-    total,
-    prev: items[(rowIndex - 1 + total) % total],
-    next: items[(rowIndex + 1) % total],
+    status: "found",
+    value: {
+      project: items[rowIndex],
+      detail: toProjectDetail(row, gallery),
+      index: rowIndex + 1,
+      total,
+      prev: items[(rowIndex - 1 + total) % total],
+      next: items[(rowIndex + 1) % total],
+    },
   };
 }

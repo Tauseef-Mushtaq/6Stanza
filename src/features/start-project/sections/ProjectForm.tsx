@@ -50,6 +50,10 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Guards against a double-click/double-Enter submitting twice before
+    // the `loading` state has a chance to disable the button (spec §22).
+    if (status === "submitting") return;
+
     const nextErrors = validateInquiry(inquiry);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -59,9 +63,15 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       await submitInquiry(inquiry);
       onSuccess();
-    } catch {
+    } catch (err) {
       // Entered information is preserved — `inquiry` state is untouched.
-      setSubmitError("We couldn't send your message. Please try again.");
+      // `submitInquiry` already resolves the failure down to a safe,
+      // user-facing message (validation-drift vs. a real server/DB
+      // failure both arrive here as `Error.message`) — use it instead
+      // of a hardcoded string, so the person sees why it failed rather
+      // than always the same generic line.
+      const message = err instanceof Error && err.message ? err.message : "We couldn't send your message. Please try again.";
+      setSubmitError(message);
       setStatus("error");
     }
   }
@@ -72,6 +82,25 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="relative w-full" style={{ background: "var(--color-background)" }}>
+      {/*
+        Module 10F — honeypot field for `projectInquirySchema`'s
+        `website` check (spec: bots fill every field; real visitors
+        never see or reach this one). Visually and from-AT hidden
+        without `display:none`/`hidden` (some bots skip those), kept
+        out of tab order, and not `autocomplete`d.
+      */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}>
+        <label htmlFor="website">Leave this field blank</label>
+        <input
+          type="text"
+          id="website"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          value={inquiry.website}
+          onChange={(e) => field("website", e.target.value)}
+        />
+      </div>
       <Container className="flex flex-col gap-20" style={{ paddingBlock: "var(--space-section)" }}>
         {/* CHAPTER 02 — Project Context */}
         <div className="flex flex-col gap-8">
@@ -196,7 +225,7 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
           </Reveal>
 
           <Reveal direction="up" delay={0.1} className="flex flex-col gap-4">
-            <Button type="submit" variant="primary" size="lg" disabled={status === "submitting"} className="w-fit">
+            <Button type="submit" variant="primary" size="lg" loading={status === "submitting"} className="w-fit">
               {status === "submitting" ? "Sending…" : "Start the conversation"}
             </Button>
             {submitError ? (

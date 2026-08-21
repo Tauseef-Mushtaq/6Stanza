@@ -16,12 +16,19 @@ export function AdminNav({ displayName }: { displayName: string | null }) {
   return (
     <header className="w-full border-b" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
       <Container className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3" aria-label="Back to homepage">
           <BrandMark size={22} />
           <TechnicalLabel>Admin</TechnicalLabel>
-        </div>
+        </Link>
 
         <nav aria-label="Admin" className="flex items-center gap-6">
+          <Link
+            href="/"
+            className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand)]"
+            style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--color-text-secondary)" }}
+          >
+            ← Homepage
+          </Link>
           <Link
             href="/admin"
             className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand)]"

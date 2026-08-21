@@ -45,10 +45,10 @@ export function DeleteInsightButton({ id }: { id: string }) {
         variant="outline"
         size="sm"
         onClick={handleClick}
-        disabled={pending}
+        loading={pending}
         style={{ borderColor: "var(--color-error)", color: "var(--color-error)" }}
       >
-        {pending ? "Deleting…" : confirming ? "Confirm delete" : "Delete"}
+        {confirming ? "Confirm delete" : "Delete"}
       </Button>
       {confirming && !pending ? (
         <>
