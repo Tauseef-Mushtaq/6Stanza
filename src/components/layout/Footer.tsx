@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Divider } from "@/components/ui/Divider";
 import { primaryNav } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { siteConfig, whatsappLink } from "@/config/site";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -30,6 +30,15 @@ export function Footer() {
                 {route.label}
               </Link>
             ))}
+            <Link
+              href={whatsappLink("Hi 6STANZA, I'd like to get in touch.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand)]"
+              style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)" }}
+            >
+              WhatsApp
+            </Link>
           </nav>
         </div>
 

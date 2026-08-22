@@ -2,14 +2,14 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, Divider } from "@/components/ui/Divider";
 import { Reveal } from "@/components/motion";
+import { whatsappLink } from "@/config/site";
 
 /**
- * CHAPTER 02 — Contact Details. No email, phone, or address exists
- * anywhere in the project's config (`src/config/site.ts` has only
- * name/legalName/tagline/url) — per §12/§24, fabricating one is
- * explicitly forbidden. Rather than either inventing details or
- * leaving a hole, this is an honest, clearly-labeled placeholder row
- * that points to the real channel that *does* exist: the intake form.
+ * CHAPTER 02 — Contact Details. Email/phone/address are still
+ * intentionally absent from `src/config/site.ts` (per §12/§24,
+ * fabricating one is forbidden), but WhatsApp Business is now a real,
+ * configured channel (`whatsappLink()` in site config) — so that row
+ * links out to it directly instead of being a placeholder.
  */
 export function ContactDetails() {
   return (
@@ -34,17 +34,22 @@ export function ContactDetails() {
               reach the team with the right context.
             </p>
           </div>
-          <div className="flex flex-col gap-2 py-8" style={{ borderBottom: "1px solid var(--color-border)" }}>
+          <div className="flex flex-col gap-2 py-8 sm:flex-row sm:items-baseline sm:justify-between" style={{ borderBottom: "1px solid var(--color-border)" }}>
             <h3
               className="font-[var(--font-display)] tracking-tight"
               style={{ fontSize: "var(--text-h3)", lineHeight: "var(--leading-tight)" }}
             >
-              Direct email &amp; phone
+              WhatsApp Business
             </h3>
-            <p style={{ color: "var(--color-text-muted)", fontSize: "var(--text-body)" }}>
-              Published here soon — for now, the fastest path to us is
-              the form below.
-            </p>
+            <a
+              href={whatsappLink("Hi 6STANZA, I'd like to get in touch.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand)]"
+              style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--color-text-secondary)" }}
+            >
+              Chat with us →
+            </a>
           </div>
         </div>
       </Container>

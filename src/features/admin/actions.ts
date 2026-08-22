@@ -36,6 +36,8 @@ import {
   removeProjectGalleryImage,
   reorderProjectGallery,
 } from "@/lib/services/projectMediaService";
+import { updateUserRoleForAdmin, deleteUserForAdmin } from "@/lib/services/userManagementService";
+import { updateUserRoleSchema, deleteUserSchema } from "@/lib/validation/adminUser";
 import type { ServiceRow } from "@/lib/repositories/services";
 import type { ProjectRow } from "@/lib/repositories/projects";
 import type { TeamMemberRow } from "@/lib/repositories/teamMembers";
@@ -460,4 +462,53 @@ export async function reorderProjectGalleryAction(
   const result = await reorderProjectGallery(projectId, orderedIds);
   if (result.ok) revalidateProjectPaths(projectId);
   return result;
+}
+
+// ---------------------------------------------------------------------
+// User Management Server Actions.
+//
+//   Admin UI (UserRoleSelect/DeleteUserButton) → Server Action (below)
+//   → requireAdmin() → validate → userManagementService → Supabase
+//
+// Same shape/authorization pattern as every action above: `requireAdmin()`
+// runs first and throws for anyone who isn't an authenticated admin,
+// then the input is validated with zod before it ever reaches the
+// service layer (spec — "never trust a role/id sent by the browser").
+// `profile.id` from that same `requireAdmin()` call is threaded through
+// as `actingAdminId` so the service layer can refuse a self-role-change
+// or self-delete (see `userManagementService.ts` for why that matters).
+// ---------------------------------------------------------------------
+
+export type UpdateUserRoleActionResult = { ok: true } | { ok: false; message: string };
+
+export async function updateUserRoleAction(input: { userId: string; role: string }): Promise<UpdateUserRoleActionResult> {
+  const profile = await requireAdmin();
+
+  const parsed = updateUserRoleSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid request." };
+  }
+
+  const result = await updateUserRoleForAdmin(profile.id, parsed.data.userId, parsed.data.role);
+  if (!result.ok) return result;
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+export type DeleteUserActionResult = { ok: true } | { ok: false; message: string };
+
+export async function deleteUserAction(input: { userId: string }): Promise<DeleteUserActionResult> {
+  const profile = await requireAdmin();
+
+  const parsed = deleteUserSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid request." };
+  }
+
+  const result = await deleteUserForAdmin(profile.id, parsed.data.userId);
+  if (!result.ok) return result;
+
+  revalidatePath("/admin/users");
+  return { ok: true };
 }

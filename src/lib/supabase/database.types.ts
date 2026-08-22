@@ -71,10 +71,16 @@ export interface Database {
         Update: {
           display_name?: string | null;
           avatar_url?: string | null;
-          // `role` intentionally excluded — see the profiles migration's
-          // `enforce_profile_role_immutable` trigger. Role changes go
-          // through the future admin module's own privileged path, not
-          // a generic profile update.
+          // `role` re-added here for the user-management admin module
+          // (`lib/repositories/profiles.ts#updateProfileRole`) — this
+          // *is* the "future admin module's own privileged path" the
+          // comment below used to describe. The DB-level backstop is
+          // unchanged: `profiles_enforce_role_immutable`
+          // (0001_profiles.sql) still raises unless the calling
+          // session is `is_admin()`, regardless of what this type
+          // permits — this type change alone grants no capability the
+          // trigger doesn't independently allow.
+          role?: ProfileRole;
         };
         Relationships: [];
       };

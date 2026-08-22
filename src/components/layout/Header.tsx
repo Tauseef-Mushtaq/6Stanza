@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { MenuTrigger } from "@/components/ui/nav/NavPrimitives";
 import { primaryNav, ctaRoute } from "@/config/routes";
-import { siteConfig } from "@/config/site";
+import { siteConfig, whatsappLink } from "@/config/site";
 import { cn } from "@/lib/utils/cn";
 import { syncHeaderHeightVar } from "@/lib/motion/headerHeight";
 import { logoutAction } from "@/features/auth/actions";
@@ -130,6 +130,15 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
             </Link>
           )}
           <Link
+            href={whatsappLink("Hi 6STANZA, I'd like to get in touch.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)] sm:inline"
+            style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+          >
+            WhatsApp
+          </Link>
+          <Link
             href={ctaRoute.href}
             className="hidden rounded-[var(--radius-pill)] px-5 py-2.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110 sm:inline-flex"
             style={{ fontSize: "var(--text-small)", background: "var(--color-brand)", color: "var(--stz-white)" }}
@@ -191,6 +200,16 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
             style={{ background: "var(--color-brand)", color: "var(--stz-white)" }}
           >
             {ctaRoute.label}
+          </Link>
+          <Link
+            href={whatsappLink("Hi 6STANZA, I'd like to get in touch.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileOpen(false)}
+            className="mt-2 inline-flex items-center justify-center rounded-[var(--radius-pill)] px-5 py-3 font-[var(--font-sans)] font-medium"
+            style={{ background: "#25D366", color: "#ffffff" }}
+          >
+            Chat on WhatsApp
           </Link>
           {authState?.isAdmin ? (
             <Link

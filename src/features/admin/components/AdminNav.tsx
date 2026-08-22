@@ -71,6 +71,13 @@ export function AdminNav({ displayName }: { displayName: string | null }) {
           >
             Insights
           </Link>
+          <Link
+            href="/admin/users"
+            className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand)]"
+            style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--color-text-secondary)" }}
+          >
+            Users
+          </Link>
           {displayName ? (
             <span
               className="hidden font-[var(--font-mono)] uppercase sm:inline"
