@@ -19,3 +19,4 @@ export function whatsappLink(message?: string): string {
   const base = `https://wa.me/${whatsappNumber}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
+
