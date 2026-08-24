@@ -29,6 +29,17 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  /**
+   * Domain-alignment task — Google Search Console URL-prefix
+   * verification for the current live deployment
+   * (https://6stanza.vercel.app). This is a one-time ownership proof;
+   * remove or replace it if the verified property is ever recreated
+   * against a different URL (e.g. once https://6stanza.com goes live
+   * and gets its own Search Console property).
+   */
+  verification: {
+    google: "kfGpGS6PMUepeYIPk7gdYt_X8xuqLYC3BLQGApO1kuw",
+  },
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
