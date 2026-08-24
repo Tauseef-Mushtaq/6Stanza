@@ -20,6 +20,7 @@ interface FormState {
   content: InsightBlockState[];
   readingTime: string;
   mediaPath: string;
+  relatedServiceSlug: string;
   status: string;
 }
 
@@ -58,7 +59,17 @@ function toBlockState(block: unknown): InsightBlockState | null {
 
 function toFormState(insight?: InsightRow): FormState {
   if (!insight) {
-    return { slug: "", title: "", category: "", excerpt: "", content: [], readingTime: "", mediaPath: "", status: "draft" };
+    return {
+      slug: "",
+      title: "",
+      category: "",
+      excerpt: "",
+      content: [],
+      readingTime: "",
+      mediaPath: "",
+      relatedServiceSlug: "",
+      status: "draft",
+    };
   }
 
   const rawContent = Array.isArray(insight.content) ? insight.content : [];
@@ -72,6 +83,7 @@ function toFormState(insight?: InsightRow): FormState {
     content,
     readingTime: insight.reading_time,
     mediaPath: insight.media_path ?? "",
+    relatedServiceSlug: insight.related_service_slug ?? "",
     status: insight.status,
   };
 }
@@ -164,6 +176,7 @@ export function InsightForm({ insight }: { insight?: InsightRow }) {
       content: cleanContent(form.content),
       readingTime: form.readingTime,
       mediaPath: form.mediaPath,
+      relatedServiceSlug: form.relatedServiceSlug,
       status: form.status,
     };
 
@@ -260,6 +273,19 @@ export function InsightForm({ insight }: { insight?: InsightRow }) {
           helperText="Optional — not yet rendered on the public article page."
         />
         {fieldErrors.mediaPath ? <ErrorText>{fieldErrors.mediaPath}</ErrorText> : null}
+
+        <FieldGroup>
+          <Label htmlFor="relatedServiceSlug">Related service (optional)</Label>
+          <Input
+            id="relatedServiceSlug"
+            value={form.relatedServiceSlug}
+            onChange={(e) => field("relatedServiceSlug", e.target.value)}
+            placeholder="devops"
+            aria-invalid={Boolean(fieldErrors.relatedServiceSlug)}
+          />
+          <HelperText>The exact slug of a service page (e.g. &ldquo;devops&rdquo;). Leave blank if this article has no natural service tie-in — never guess.</HelperText>
+          {fieldErrors.relatedServiceSlug ? <ErrorText>{fieldErrors.relatedServiceSlug}</ErrorText> : null}
+        </FieldGroup>
 
         <FieldGroup>
           <Label htmlFor="status">Status</Label>

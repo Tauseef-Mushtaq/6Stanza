@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { ResetPasswordForm } from "@/features/auth/sections/ResetPasswordForm";
 
-export const metadata: Metadata = { title: "Set new password" };
+export const metadata: Metadata = {
+  title: "Set new password",
+  robots: { index: false, follow: false },
+};
 
 /**
  * Deliberately does NOT redirect an "already authenticated" visitor

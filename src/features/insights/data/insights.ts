@@ -26,6 +26,8 @@ export interface Insight {
   readingTime: string;
   excerpt: string;
   content: InsightBlock[];
+  /** Optional related-service slug (SEO-4 spec §17) — `null` when the article has no natural service tie-in. Never fabricated. */
+  relatedServiceSlug: string | null;
 }
 
 /**
@@ -43,4 +45,5 @@ export const insightCategories = [
   "DevOps",
   "Cyber Security",
   "Strategy",
+  "SEO",
 ] as const;

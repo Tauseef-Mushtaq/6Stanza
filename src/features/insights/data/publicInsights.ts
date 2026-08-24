@@ -61,6 +61,7 @@ function toInsight(row: InsightRow): Insight {
     readingTime: row.reading_time,
     excerpt: row.excerpt,
     content: normalizeInsightBlocks(row.content),
+    relatedServiceSlug: row.related_service_slug ?? null,
   };
 }
 

@@ -1,14 +1,47 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { siteConfig } from "@/config/site";
+import { absoluteUrl, defaultOgImage } from "@/lib/seo/canonical";
 
+/**
+ * SEO-1 — root metadata defaults (Next.js Metadata API), inherited by
+ * every route unless a page overrides a field. `metadataBase` anchors
+ * every relative OG/Twitter image and every `alternates.canonical` an
+ * individual page sets to the real production origin
+ * (`siteConfig.url` — https://6stanza.com), never the demo Vercel
+ * deployment, regardless of which environment actually served the
+ * request. `robots` defaults to fully indexable; individual
+ * private/internal pages (`/admin`, `/account`, `/login`, etc.)
+ * override this with `robots: { index: false, follow: false }`.
+ */
 export const metadata: Metadata = {
   title: {
-    default: siteConfig.name,
+    default: `${siteConfig.name} — Technology Partner for Strategy, Software & Systems`,
     template: `%s — ${siteConfig.name}`,
   },
   description: siteConfig.tagline,
   metadataBase: new URL(siteConfig.url),
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: siteConfig.name,
+    description: siteConfig.tagline,
+    url: absoluteUrl("/"),
+    images: [{ url: defaultOgImage }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.name,
+    description: siteConfig.tagline,
+    images: [defaultOgImage],
+  },
 };
 
 /**

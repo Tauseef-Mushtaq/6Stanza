@@ -6,10 +6,17 @@ import { getPublicInsights } from "@/features/insights/data/publicInsights";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PublicRetryState } from "@/components/ui/PublicRetryState";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { webPageSchema, breadcrumbSchema } from "@/lib/seo/structuredData";
+
+const description = "Technical thinking from 6STANZA on engineering, cloud, DevOps, and security.";
 
 export const metadata: Metadata = {
-  title: "Insights",
-  description: "Technical thinking from 6STANZA on engineering, cloud, DevOps, and security.",
+  title: "Insights — Engineering & Technology Articles",
+  description,
+  alternates: {
+    canonical: "/insights",
+  },
 };
 
 /**
@@ -29,6 +36,8 @@ export default async function InsightsPage() {
 
   return (
     <>
+      <JsonLd data={webPageSchema({ path: "/insights", name: "Insights — Engineering & Technology Articles", description })} />
+      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Insights", path: "/insights" }])} />
       <InsightsHero count={insights.length} />
       {!ok ? (
         <Container className="py-16">

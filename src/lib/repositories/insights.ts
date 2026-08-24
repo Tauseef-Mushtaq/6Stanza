@@ -66,6 +66,7 @@ function toRow(input: InsightInput) {
     content: input.content,
     reading_time: input.readingTime,
     media_path: input.mediaPath || null,
+    related_service_slug: input.relatedServiceSlug || null,
     status: input.status,
   };
 }

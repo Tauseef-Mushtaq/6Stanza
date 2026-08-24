@@ -11,6 +11,7 @@ import { getCurrentUser, getCurrentProfile } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Account",
+  robots: { index: false, follow: false },
 };
 
 /**

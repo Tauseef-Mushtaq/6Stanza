@@ -312,6 +312,7 @@ export interface Database {
           reading_time: string;
           media_path: string | null;
           status: ContentStatus;
+          related_service_slug: string | null;
           created_at: string;
           updated_at: string;
           published_at: string | null;
@@ -325,6 +326,7 @@ export interface Database {
           reading_time: string;
           media_path?: string | null;
           status?: ContentStatus;
+          related_service_slug?: string | null;
           published_at?: string | null;
         };
         Update: {
@@ -336,6 +338,7 @@ export interface Database {
           reading_time?: string;
           media_path?: string | null;
           status?: ContentStatus;
+          related_service_slug?: string | null;
           published_at?: string | null;
         };
         Relationships: [];

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Section, DarkSection } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -11,6 +12,18 @@ import { Card, CardEyebrow, CardTitle, CardDescription, CardFooter } from "@/com
 import { FieldGroup, Label, HelperText, ErrorText, Input, Textarea, Select, Checkbox, Radio } from "@/components/ui/form/Field";
 import { NavItem, NavGroup, MenuTrigger, SectionIndicator } from "@/components/ui/nav/NavPrimitives";
 import { BrandMark } from "@/components/ui/BrandMark";
+
+/**
+ * SEO-1 — internal design/component showcase route, not a marketing
+ * page. `noindex, nofollow` keeps it out of search results even
+ * though `robots.txt` also disallows crawling it (SEO-1 §10/§11 —
+ * robots.txt alone isn't a reliable de-indexing mechanism, e.g. if
+ * this URL is ever linked externally).
+ */
+export const metadata: Metadata = {
+  title: "Design System",
+  robots: { index: false, follow: false },
+};
 
 const COLOR_GROUPS: { title: string; swatches: { name: string; varName: string; dark?: boolean }[] }[] = [
   {

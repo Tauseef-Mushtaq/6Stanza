@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicInsightBySlug, getNextPublicInsight } from "@/features/insights/data/publicInsights";
 import { throwPublicCmsError } from "@/lib/utils/publicCms";
+import { absoluteUrl, defaultOgImage } from "@/lib/seo/canonical";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { articleSchema, breadcrumbSchema } from "@/lib/seo/structuredData";
 import { ArticleHero } from "@/features/insights/sections/ArticleHero";
 import { ArticleIntro } from "@/features/insights/sections/ArticleIntro";
 import { ArticleContent } from "@/features/insights/sections/ArticleContent";
+import { RelatedServiceCTA } from "@/features/insights/sections/RelatedServiceCTA";
 import { ArticleFooter } from "@/features/insights/sections/ArticleFooter";
 
 interface PageProps {
@@ -25,9 +29,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // metadata or claim the article doesn't exist; the page body's own
   // read throws and hits the safe error boundary.
   if (result.status !== "found") return {};
+  const insight = result.value;
+  const url = absoluteUrl(`/insights/${slug}`);
+  // Insight has no cover-image field yet (spec §16 — falls back to
+  // the site-level brand image rather than inventing one). `date` is
+  // real CMS content, used as the article's published time.
   return {
-    title: result.value.title,
-    description: result.value.excerpt,
+    title: insight.title,
+    description: insight.excerpt,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      title: insight.title,
+      description: insight.excerpt,
+      url,
+      publishedTime: insight.date,
+      images: [{ url: defaultOgImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: insight.title,
+      description: insight.excerpt,
+      images: [defaultOgImage],
+    },
   };
 }
 
@@ -63,9 +87,25 @@ export default async function InsightDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <JsonLd
+        data={articleSchema({
+          slug: insight.slug,
+          headline: insight.title,
+          description: insight.excerpt,
+          datePublished: insight.date,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Insights", path: "/insights" },
+          { name: insight.title, path: `/insights/${insight.slug}` },
+        ])}
+      />
       <ArticleHero insight={insight} />
       <ArticleIntro excerpt={insight.excerpt} />
       <ArticleContent content={insight.content} />
+      <RelatedServiceCTA relatedServiceSlug={insight.relatedServiceSlug} />
       <ArticleFooter next={next} />
     </>
   );

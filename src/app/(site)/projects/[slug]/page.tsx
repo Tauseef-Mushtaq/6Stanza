@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublicProjectDetail } from "@/features/projects/data/publicProjects";
 import { throwPublicCmsError } from "@/lib/utils/publicCms";
+import { absoluteUrl, defaultOgImage } from "@/lib/seo/canonical";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { projectSchema, breadcrumbSchema } from "@/lib/seo/structuredData";
 import { ProjectDetailHero } from "@/features/projects/sections/ProjectDetailHero";
 import { ProjectOverview } from "@/features/projects/sections/ProjectOverview";
 import { ProjectChallenge } from "@/features/projects/sections/ProjectChallenge";
@@ -36,9 +39,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // metadata; the page body's own read throws and hits the safe
   // error boundary, so metadata just degrades to empty here.
   if (result.status !== "found") return {};
+  const { project } = result.value;
+  const url = absoluteUrl(`/projects/${slug}`);
+  // ProjectItem has no cover-image field yet (spec §16 — no CMS image
+  // to use here means fall back to the site-level brand image rather
+  // than inventing one).
   return {
-    title: result.value.project.title,
-    description: result.value.project.description,
+    title: project.title,
+    description: project.description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      title: project.title,
+      description: project.description,
+      url,
+      images: [{ url: defaultOgImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: project.title,
+      description: project.description,
+      images: [defaultOgImage],
+    },
   };
 }
 
@@ -62,6 +84,21 @@ export default async function ProjectDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <JsonLd
+        data={projectSchema({
+          slug: project.slug,
+          name: project.title,
+          description: project.description,
+          technologies: project.technologies,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path: `/projects/${project.slug}` },
+        ])}
+      />
       <ProjectDetailHero project={project} index={index} total={total} positioning={detail.positioning} />
       <ProjectOverview summary={detail.overview.summary} contribution={detail.overview.contribution} />
       <ProjectChallenge challenge={detail.challenge} />

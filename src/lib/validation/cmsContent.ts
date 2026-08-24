@@ -132,6 +132,8 @@ export const insightSchema = z.object({
   content: z.array(insightBlockSchema).max(100).default([]),
   readingTime: z.string().trim().min(1, "Enter a reading time.").max(20),
   mediaPath: mediaPathSchema,
+  /** Optional FK to `services.slug` (SEO-4 spec §17) — powers the "Related Service" CTA. Empty string clears it. */
+  relatedServiceSlug: slugSchema.optional().or(z.literal("")),
   status: contentStatusSchema.default("draft"),
 });
 

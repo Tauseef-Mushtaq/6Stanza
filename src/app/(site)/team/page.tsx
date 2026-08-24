@@ -10,10 +10,17 @@ import { getPublicTeam } from "@/features/team/data/publicTeam";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PublicRetryState } from "@/components/ui/PublicRetryState";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { webPageSchema, breadcrumbSchema } from "@/lib/seo/structuredData";
+
+const description = "The multidisciplinary team behind 6STANZA's systems — engineering, design, infrastructure, and strategy.";
 
 export const metadata: Metadata = {
-  title: "Team",
-  description: "The multidisciplinary team behind 6STANZA's systems — engineering, design, infrastructure, and strategy.",
+  title: "Meet the Team",
+  description,
+  alternates: {
+    canonical: "/team",
+  },
 };
 
 /**
@@ -29,6 +36,8 @@ export default async function TeamPage() {
 
   return (
     <>
+      <JsonLd data={webPageSchema({ path: "/team", name: "Meet the Team", description })} />
+      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Team", path: "/team" }])} />
       <TeamHero team={team} />
       {/* Module 10B (spec §15) — distinguishes a failed Team read
           (controlled error, retry) from a genuinely empty published

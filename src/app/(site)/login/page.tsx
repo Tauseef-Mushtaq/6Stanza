@@ -5,6 +5,7 @@ import { safeRedirectPath } from "@/lib/utils/safeRedirect";
 export const metadata: Metadata = {
   title: "Sign In",
   description: "Sign in to your 6STANZA account.",
+  robots: { index: false, follow: false },
 };
 
 /**
