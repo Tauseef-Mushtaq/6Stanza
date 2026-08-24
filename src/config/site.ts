@@ -2,7 +2,15 @@ export const siteConfig = {
   name: "6STANZA",
   legalName: "6STANZA Pvt Ltd",
   tagline: "Technology partner for Strategy, Software, Systems, Security, Scalability, Speed.",
-  url: "https://6stanza.com",
+  /**
+   * Domain-alignment task — current canonical/public deployment URL.
+   * The site is currently live only at the Vercel deployment below;
+   * `https://6stanza.com` is the intended future custom domain, not
+   * yet the active canonical target. When the custom domain goes
+   * live, change this single value back (and re-verify) rather than
+   * touching any of the SEO code that reads it.
+   */
+  url: "https://6stanza.vercel.app",
 } as const;
 
 /**

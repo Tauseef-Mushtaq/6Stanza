@@ -7,9 +7,10 @@ import { absoluteUrl, defaultOgImage } from "@/lib/seo/canonical";
  * SEO-1 — root metadata defaults (Next.js Metadata API), inherited by
  * every route unless a page overrides a field. `metadataBase` anchors
  * every relative OG/Twitter image and every `alternates.canonical` an
- * individual page sets to the real production origin
- * (`siteConfig.url` — https://6stanza.com), never the demo Vercel
- * deployment, regardless of which environment actually served the
+ * individual page sets to whatever `siteConfig.url` currently is —
+ * see that file's comment for the active domain (domain-alignment
+ * task: currently the live Vercel deployment, not the future custom
+ * domain), regardless of which environment actually served the
  * request. `robots` defaults to fully indexable; individual
  * private/internal pages (`/admin`, `/account`, `/login`, etc.)
  * override this with `robots: { index: false, follow: false }`.

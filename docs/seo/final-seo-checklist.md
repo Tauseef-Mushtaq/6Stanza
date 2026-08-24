@@ -7,10 +7,12 @@ and the linked docs for that.
 ## Before deployment
 
 - [x] Production domain confirmed in code — `siteConfig.url =
-      https://6stanza.com`, used consistently by canonical, sitemap,
-      robots, Open Graph, Twitter, and JSON-LD. **Not independently
-      confirmed that this domain is actually the live deployment
-      target** — confirm with whoever controls DNS/hosting.
+      https://6stanza.vercel.app` (updated by the domain-alignment
+      task; see `MODULE-SEO-DOMAIN-ALIGNMENT-HANDOFF.md`), used
+      consistently by canonical, sitemap, robots, Open Graph, Twitter,
+      and JSON-LD. `https://6stanza.com` remains the intended future
+      custom domain — not active until `siteConfig.url` is changed
+      again and re-verified.
 - [x] Environment variables checked — `.env.local` has the three
       required Supabase values populated (URL, anon key, service role
       key). Confirm the same three are set in the production
@@ -45,11 +47,11 @@ and the linked docs for that.
 
 ## Immediately after deployment
 
-- [ ] Homepage accessible at `https://6stanza.com`
-- [ ] `https://6stanza.com/sitemap.xml` accessible and contains real
-      service/project/insight URLs (not just the 8 static routes seen
-      in this sandbox)
-- [ ] `https://6stanza.com/robots.txt` accessible
+- [ ] Homepage accessible at `https://6stanza.vercel.app`
+- [ ] `https://6stanza.vercel.app/sitemap.xml` accessible and contains
+      real service/project/insight URLs (not just the 8 static routes
+      seen in this sandbox)
+- [ ] `https://6stanza.vercel.app/robots.txt` accessible
 - [ ] View source on `/`, `/about`, a `/services/[slug]` — confirm
       canonical tag matches the real URL visited
 - [ ] Search Console property verified (domain or URL-prefix — see
