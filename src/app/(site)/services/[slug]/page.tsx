@@ -18,16 +18,16 @@ interface PageProps {
 }
 
 /**
- * Module 9F — deliberately returns no params at build time rather than
- * querying the CMS during `next build` (a build-time list would go
- * stale the moment a service is published/archived afterward, and
- * this sandbox has no network access to Supabase at build time
- * anyway). `dynamicParams` defaults to `true`, so every slug is still
- * resolved on request instead — see this file's note on caching below.
+ * Module 9F (revised) — `generateStaticParams` intentionally removed.
+ * Returning `[]` still marked this route eligible for the static-shell
+ * render path, and `createSupabaseServerClient()` calls `cookies()`
+ * even for public reads — hitting `cookies()` on that static-shell
+ * path throws `DYNAMIC_SERVER_USAGE`, which Next surfaces as a 500 on
+ * every real request (confirmed via Vercel runtime logs). Omitting
+ * the export entirely (matching `/insights/[slug]`, which never had
+ * one) keeps the route fully dynamic — `dynamicParams` still defaults
+ * to `true`, so every slug resolves normally on request.
  */
-export function generateStaticParams() {
-  return [];
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
