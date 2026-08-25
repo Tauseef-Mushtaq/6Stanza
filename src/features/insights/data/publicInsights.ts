@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { getPublishedInsights, getPublishedInsight } from "@/lib/services/insightContentService";
+import { getPublicMediaUrl } from "@/lib/cms/media";
 import { insightBlockSchema } from "@/lib/validation/cmsContent";
 import type { InsightRow } from "@/lib/repositories/insights";
 import type { Insight, InsightBlock } from "@/features/insights/data/insights";
@@ -62,6 +63,13 @@ function toInsight(row: InsightRow): Insight {
     excerpt: row.excerpt,
     content: normalizeInsightBlocks(row.content),
     relatedServiceSlug: row.related_service_slug ?? null,
+    // Fix: this mapping never existed before — `media_path` reached
+    // the database via the admin's "Cover image" upload
+    // (InsightForm.tsx → MediaUploadField) but no public adapter ever
+    // read it back, so no uploaded cover image could ever appear on
+    // the site. Same `getPublicMediaUrl(bucket, path)` pattern
+    // `publicTeam.ts` already uses for `team_members.image_path`.
+    coverImage: getPublicMediaUrl("insights", row.media_path),
   };
 }
 

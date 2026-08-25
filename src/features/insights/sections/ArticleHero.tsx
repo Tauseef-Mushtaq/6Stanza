@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { SubtleGrid } from "@/components/ui/Divider";
@@ -21,6 +22,35 @@ export function ArticleHero({ insight }: { insight: Insight }) {
       style={{ background: "var(--stz-navy-950)", color: "var(--stz-white)", paddingTop: "var(--safe-top)" }}
     >
       <SubtleGrid className="opacity-40" />
+
+      {/*
+       * Fix: the admin "Cover image" upload (InsightForm.tsx) reached
+       * `insights.media_path` in the database but nothing on the
+       * public site ever read it back or rendered it — this is the
+       * actual reason the image never appeared. Renders only when an
+       * admin has actually uploaded one (spec-equivalent to
+       * ProjectGallery's `images = []` fallback below) — never a
+       * fabricated placeholder image.
+       */}
+      {insight.coverImage ? (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={insight.coverImage}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-30"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, var(--stz-navy-950) 0%, rgba(6,10,20,0.55) 45%, var(--stz-navy-950) 100%)",
+            }}
+          />
+        </div>
+      ) : null}
 
       <Container className="relative z-10 flex flex-col gap-7">
         <Reveal direction="up">

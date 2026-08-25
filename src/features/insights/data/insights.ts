@@ -26,6 +26,8 @@ export interface Insight {
   readingTime: string;
   excerpt: string;
   content: InsightBlock[];
+  /** Public Storage URL for the admin-uploaded cover image (`insights.media_path`), built by `getPublicMediaUrl("insights", ...)`. `undefined` when the admin hasn't uploaded one — never fabricated. */
+  coverImage?: string;
   /** Optional related-service slug (SEO-4 spec §17) — `null` when the article has no natural service tie-in. Never fabricated. */
   relatedServiceSlug: string | null;
 }
