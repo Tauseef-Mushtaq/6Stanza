@@ -14,6 +14,16 @@ interface ProjectGalleryProps {
 
 const PANEL_WIDTHS = ["58vw", "38vw", "48vw", "34vw"];
 const PANEL_ASPECTS = ["aspect-[16/10]", "aspect-[3/4]", "aspect-[4/3]", "aspect-[3/4]"];
+// Module 9K (gallery-rendering fix) — the four variants above are
+// tuned for wide photography and were built before real uploads
+// existed. Real admin-uploaded images are frequently portrait UI/app
+// screenshots, and forcing those into a 16:10 or 4:3 box with
+// `object-cover` crops off the top/bottom of the screenshot instead of
+// showing it — which is what actually broke visually in production.
+// A single tall, closer-to-square box plus `object-contain` (see
+// below) fits both photography and screenshots without cropping
+// either.
+const UPLOADED_PANEL_ASPECT = "aspect-[4/5]";
 
 /**
  * CHAPTER 06 — project gallery (spec §10 Ch.06). A vertical-scroll-
@@ -48,7 +58,7 @@ export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProp
           {Array.from({ length: panelCount }, (_, i) => {
             const image = hasImages ? images[i] : undefined;
             const width = PANEL_WIDTHS[i % PANEL_WIDTHS.length];
-            const aspect = PANEL_ASPECTS[i % PANEL_ASPECTS.length];
+            const aspect = image ? UPLOADED_PANEL_ASPECT : PANEL_ASPECTS[i % PANEL_ASPECTS.length];
             return (
               <div
                 key={image ? image.src : i}
@@ -56,14 +66,17 @@ export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProp
                 style={{
                   width,
                   maxWidth: "720px",
-                  background: image
-                    ? undefined
-                    : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + (i % 4) * 3}%), hsl(${accent} 65% ${26 + (i % 4) * 4}%))`,
+                  background: image ? "var(--color-surface)" : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + (i % 4) * 3}%), hsl(${accent} 65% ${26 + (i % 4) * 4}%))`,
                   border: "1px solid var(--color-border)",
                 }}
               >
                 {image ? (
-                  <Image src={image.src} alt={image.alt} fill className="object-cover" sizes="(min-width: 1024px) 50vw, 90vw" />
+                  // `object-contain` (not `cover`) — the panel's own
+                  // background above fills whatever space is left
+                  // around the image, so a portrait screenshot letterboxes
+                  // cleanly instead of being cropped or bleeding into the
+                  // next panel.
+                  <Image src={image.src} alt={image.alt} fill className="object-contain" sizes="(min-width: 1024px) 50vw, 90vw" />
                 ) : (
                   <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden preserveAspectRatio="none">
                     <defs>
