@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState, useTransition } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
@@ -15,22 +15,46 @@ import { validateImageFile } from "@/lib/validation/media";
 import type { ProjectMediaRow } from "@/lib/repositories/projectMedia";
 
 /**
- * Module 9K — the Project gallery manager (spec §12/§13). Lives on
- * `/admin/projects/[id]` only — edit mode, never create mode — since
- * every gallery row needs a real `project_id` (see
- * `projectMediaService.ts`'s header for why). Persists each upload
- * and each removal/reorder immediately (spec §26 Option B), separate
- * from the surrounding `ProjectForm`'s own save button — the gallery
- * is not part of that form's submit payload at all.
+ * Module 9K (revised) — the Project gallery manager (spec §12/§13).
  *
- * Reordering is plain up/down buttons, not drag-and-drop (spec §12 —
- * this codebase has no existing DnD primitive, and the brief is
- * explicit that adding one just for this isn't worth it). The public
- * order is still fully deterministic either way: every move writes
- * real `sort_order` integers through `reorderProjectGalleryAction`.
+ * Originally this only rendered on `/admin/projects/[id]` (edit mode)
+ * because every gallery row needs a real `project_id` FK, and that FK
+ * only exists once the project has been saved once. That's still true
+ * at the database level — but it made the gallery invisible on
+ * `/admin/projects/new`, which read as "the feature doesn't work" to
+ * anyone creating a project for the first time.
+ *
+ * Fix: when `projectId` is omitted (create mode), this component runs
+ * in a "staged" mode instead of persisting anything immediately —
+ * selected files are kept as in-memory `File` objects with local
+ * object-URL previews, no server action is called yet, and reordering
+ * is instant local array reordering. Once the parent `ProjectForm`
+ * successfully creates the project and has a real id, it calls
+ * `flush(projectId)` (exposed via `ref`) to upload every staged file
+ * through the exact same `addProjectGalleryImageAction` used by edit
+ * mode — so the actual upload path, validation, and Storage layout are
+ * identical in both modes; only *when* the network call happens
+ * differs.
  */
-export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: string; initialMedia: ProjectMediaRow[] }) {
+export interface ProjectGalleryManagerHandle {
+  /** Uploads every staged file against a newly-created project. No-op (resolves immediately) if there are no staged files — safe to call unconditionally after create succeeds. */
+  flush: (projectId: string) => Promise<void>;
+}
+
+interface StagedFile {
+  key: string;
+  file: File;
+  previewUrl: string;
+}
+
+export const ProjectGalleryManager = forwardRef<
+  ProjectGalleryManagerHandle,
+  { projectId?: string; initialMedia?: ProjectMediaRow[] }
+>(function ProjectGalleryManager({ projectId, initialMedia = [] }, ref) {
+  const isStaged = !projectId;
+
   const [media, setMedia] = useState(initialMedia);
+  const [staged, setStaged] = useState<StagedFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -42,9 +66,70 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
   const [pendingAction, setPendingAction] = useState<"remove" | "reorder" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useImperativeHandle(ref, () => ({
+    async flush(newProjectId: string) {
+      if (staged.length === 0) return;
+
+      setUploading(true);
+      let successCount = 0;
+      const failures: string[] = [];
+
+      // Same one-at-a-time rationale as the persisted-mode path below:
+      // correct server-computed `sort_order` values and unambiguous
+      // per-file failure reporting.
+      for (const item of staged) {
+        try {
+          const formData = new FormData();
+          formData.set("file", item.file);
+          const result = await addProjectGalleryImageAction(newProjectId, formData);
+          if (result.ok) {
+            successCount += 1;
+          } else {
+            failures.push(`${item.file.name}: ${result.message}`);
+          }
+        } catch (err) {
+          console.error("ProjectGalleryManager: staged upload failed", err);
+          failures.push(`${item.file.name}: Upload failed unexpectedly.`);
+        } finally {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      }
+
+      setStaged([]);
+      setUploading(false);
+
+      if (failures.length > 0) {
+        const successPrefix = successCount > 0 ? `${successCount} image${successCount === 1 ? "" : "s"} uploaded. ` : "";
+        const failureLabel = failures.length === 1 ? "1 image failed to upload: " : `${failures.length} images failed to upload: `;
+        setError(`${successPrefix}${failureLabel}${failures.join(" ")}`);
+      }
+    },
+  }));
+
   async function handleFiles(files: FileList) {
     setError(null);
     const fileArray = Array.from(files);
+
+    if (isStaged) {
+      // Nothing to persist yet — just validate and hold onto the files
+      // with local previews until the project is created.
+      const accepted: StagedFile[] = [];
+      const failures: string[] = [];
+      for (const file of fileArray) {
+        const clientCheck = validateImageFile({ type: file.type, size: file.size });
+        if (!clientCheck.ok) {
+          failures.push(`${file.name}: ${clientCheck.message}`);
+          continue;
+        }
+        accepted.push({ key: `${file.name}-${file.size}-${crypto.randomUUID()}`, file, previewUrl: URL.createObjectURL(file) });
+      }
+      if (accepted.length > 0) setStaged((prev) => [...prev, ...accepted]);
+      if (failures.length > 0) {
+        const failureLabel = failures.length === 1 ? "1 image was rejected: " : `${failures.length} images were rejected: `;
+        setError(`${failureLabel}${failures.join(" ")}`);
+      }
+      return;
+    }
 
     // Uploads run one at a time rather than in parallel — keeps the
     // resulting `sort_order` values (computed server-side from the
@@ -63,14 +148,26 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
         continue;
       }
 
-      const formData = new FormData();
-      formData.set("file", file);
-      const result = await addProjectGalleryImageAction(projectId, formData);
-      if (result.ok) {
-        successCount += 1;
-        setMedia((prev) => [...prev, result.data]);
-      } else {
-        failures.push(`${file.name}: ${result.message}`);
+      try {
+        const formData = new FormData();
+        formData.set("file", file);
+        const result = await addProjectGalleryImageAction(projectId, formData);
+        if (result.ok) {
+          successCount += 1;
+          setMedia((prev) => [...prev, result.data]);
+        } else {
+          failures.push(`${file.name}: ${result.message}`);
+        }
+      } catch (err) {
+        // A thrown error here (network failure, a Server Action crash
+        // that didn't return the expected result shape, etc.) used to
+        // propagate as an unhandled rejection — the upload button would
+        // just sit there with nothing visibly happening and nothing
+        // logged from this component's own code. Catch it explicitly
+        // so a failure is always visible, both to the admin and in the
+        // console.
+        console.error("ProjectGalleryManager: upload failed", err);
+        failures.push(`${file.name}: Upload failed unexpectedly.`);
       }
     }
     setUploading(false);
@@ -96,7 +193,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     setError(null);
     setPendingAction("remove");
     startTransition(async () => {
-      const result = await removeProjectGalleryImageAction(projectId, id);
+      const result = await removeProjectGalleryImageAction(projectId!, id);
       if (!result.ok) {
         setError(result.message);
         setPendingAction(null);
@@ -107,7 +204,25 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     });
   }
 
+  function removeStaged(key: string) {
+    setError(null);
+    setStaged((prev) => {
+      const target = prev.find((item) => item.key === key);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((item) => item.key !== key);
+    });
+  }
+
   function move(index: number, direction: -1 | 1) {
+    if (isStaged) {
+      const target = index + direction;
+      if (target < 0 || target >= staged.length) return;
+      const reordered = [...staged];
+      [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+      setStaged(reordered);
+      return;
+    }
+
     const target = index + direction;
     if (target < 0 || target >= media.length) return;
 
@@ -117,7 +232,7 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     setPendingAction("reorder");
 
     startTransition(async () => {
-      const result = await reorderProjectGalleryAction(projectId, reordered.map((row) => row.id));
+      const result = await reorderProjectGalleryAction(projectId!, reordered.map((row) => row.id));
       if (!result.ok) {
         setError(result.message);
         setMedia(media); // revert to the last known-good order
@@ -129,59 +244,104 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
     });
   }
 
+  const itemCount = isStaged ? staged.length : media.length;
+
   return (
     <Card variant="bordered" className="gap-6">
       <div className="flex flex-col gap-2">
         <Label>Project gallery</Label>
-        <HelperText>Renders in the case-study page&apos;s Gallery chapter. Up to 4 images are used there; extras are kept but not shown.</HelperText>
+        <HelperText>
+          Renders in the case-study page&apos;s Gallery chapter.
+          {isStaged ? " Images are uploaded once you create the project." : ""}
+        </HelperText>
       </div>
 
-      {media.length > 0 ? (
+      {itemCount > 0 ? (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {media.map((item, index) => {
-            const url = buildPublicMediaUrl("projects", item.storage_path);
-            return (
-              <li key={item.id} className="flex flex-col gap-2 rounded-[var(--radius-md)] border p-2" style={{ borderColor: "var(--color-border)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- admin gallery thumbnail of an arbitrary Storage object; not a next/image-configured domain. */}
-                <img src={url} alt={item.alt_text ?? ""} className="aspect-square w-full rounded-[var(--radius-sm)] object-cover" />
-                <div className="flex items-center justify-between gap-1">
-                  <div className="flex items-center gap-1">
+          {isStaged
+            ? staged.map((item, index) => (
+                <li key={item.key} className="flex flex-col gap-2 rounded-[var(--radius-md)] border p-2" style={{ borderColor: "var(--color-border)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local blob-URL preview of a not-yet-uploaded file. */}
+                  <img src={item.previewUrl} alt="" className="aspect-square w-full rounded-[var(--radius-sm)] object-cover" />
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => move(index, -1)}
+                        disabled={index === 0}
+                        aria-label="Move image earlier"
+                        className="disabled:cursor-not-allowed disabled:opacity-30"
+                        style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => move(index, 1)}
+                        disabled={index === staged.length - 1}
+                        aria-label="Move image later"
+                        className="disabled:cursor-not-allowed disabled:opacity-30"
+                        style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
+                      >
+                        ↓
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => move(index, -1)}
-                      disabled={index === 0 || pending || uploading}
-                      aria-label="Move image earlier"
-                      className="disabled:cursor-not-allowed disabled:opacity-30"
-                      style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
+                      onClick={() => removeStaged(item.key)}
+                      aria-label="Remove image"
+                      className="underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ fontSize: "var(--text-caption)", color: "var(--color-error)" }}
                     >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => move(index, 1)}
-                      disabled={index === media.length - 1 || pending || uploading}
-                      aria-label="Move image later"
-                      className="disabled:cursor-not-allowed disabled:opacity-30"
-                      style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
-                    >
-                      ↓
+                      Remove
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item.id)}
-                    disabled={pending || uploading}
-                    aria-label="Remove image"
-                    aria-busy={pending && pendingAction === "remove"}
-                    className="underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ fontSize: "var(--text-caption)", color: "var(--color-error)" }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </li>
-            );
-          })}
+                </li>
+              ))
+            : media.map((item, index) => {
+                const url = buildPublicMediaUrl("projects", item.storage_path);
+                return (
+                  <li key={item.id} className="flex flex-col gap-2 rounded-[var(--radius-md)] border p-2" style={{ borderColor: "var(--color-border)" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- admin gallery thumbnail of an arbitrary Storage object; not a next/image-configured domain. */}
+                    <img src={url} alt={item.alt_text ?? ""} className="aspect-square w-full rounded-[var(--radius-sm)] object-cover" />
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => move(index, -1)}
+                          disabled={index === 0 || pending || uploading}
+                          aria-label="Move image earlier"
+                          className="disabled:cursor-not-allowed disabled:opacity-30"
+                          style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => move(index, 1)}
+                          disabled={index === media.length - 1 || pending || uploading}
+                          aria-label="Move image later"
+                          className="disabled:cursor-not-allowed disabled:opacity-30"
+                          style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)" }}
+                        >
+                          ↓
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(item.id)}
+                        disabled={pending || uploading}
+                        aria-label="Remove image"
+                        aria-busy={pending && pendingAction === "remove"}
+                        className="underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ fontSize: "var(--text-caption)", color: "var(--color-error)" }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
         </ul>
       ) : (
         // Spec §21 — a small gallery-specific empty presentation rather
@@ -214,4 +374,4 @@ export function ProjectGalleryManager({ projectId, initialMedia }: { projectId: 
       {error ? <ErrorText role="alert">{error}</ErrorText> : null}
     </Card>
   );
-}
+});

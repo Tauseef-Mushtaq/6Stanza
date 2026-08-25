@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -9,6 +9,7 @@ import { createProjectAction, updateProjectAction } from "@/features/admin/actio
 import { contentStatusValues, slugify } from "@/features/admin/lib/services";
 import { MediaUploadField } from "@/features/admin/components/MediaUploadField";
 import { ProjectArchitectureEditor, type ArchitectureGroupState } from "@/features/admin/components/ProjectArchitectureEditor";
+import { ProjectGalleryManager, type ProjectGalleryManagerHandle } from "@/features/admin/components/ProjectGalleryManager";
 import type { ProjectRow } from "@/lib/repositories/projects";
 
 interface FormState {
@@ -107,6 +108,7 @@ export function ProjectForm({ project }: { project?: ProjectRow }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  const galleryRef = useRef<ProjectGalleryManagerHandle>(null);
 
   function field<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -159,6 +161,11 @@ export function ProjectForm({ project }: { project?: ProjectRow }) {
         setSaved(true);
         setForm(toFormState(result.data));
       } else {
+        // Upload any gallery images staged before the project existed
+        // (see `ProjectGalleryManager`'s "staged" mode) before
+        // navigating away — the newly-created id is only available
+        // right here.
+        await galleryRef.current?.flush(result.data.id);
         router.push(`/admin/projects/${result.data.id}`);
       }
     });
@@ -302,6 +309,8 @@ export function ProjectForm({ project }: { project?: ProjectRow }) {
           </FieldGroup>
         </div>
       </Card>
+
+      {!isEdit ? <ProjectGalleryManager ref={galleryRef} /> : null}
 
       {formError ? <ErrorText>{formError}</ErrorText> : null}
 

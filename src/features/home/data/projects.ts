@@ -7,6 +7,8 @@ export interface ProjectItem {
   outcome: string;
   /** Deterministic gradient angle/hue used for the placeholder visual until real imagery exists. */
   accent: number;
+  /** Public Storage URL for the admin-uploaded cover image (`projects.media_path`), built by `getPublicMediaUrl("projects", ...)`. `undefined` when the admin hasn't uploaded one — the procedural placeholder is used in that case. */
+  coverImage?: string;
 }
 
 /**

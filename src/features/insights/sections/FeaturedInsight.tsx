@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
@@ -31,18 +32,40 @@ export function FeaturedInsight({ insight }: { insight: Insight }) {
                 className="relative aspect-[4/3] w-full overflow-hidden rounded-[var(--radius-lg)]"
                 style={{ background: "linear-gradient(135deg, var(--stz-navy-950), var(--stz-blue-600))", border: "1px solid var(--color-border)" }}
               >
-                <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden preserveAspectRatio="none">
-                  <line x1="10" y1="80" x2="90" y2="20" stroke="rgba(247,249,252,0.25)" strokeWidth="0.4" />
-                  <line x1="10" y1="60" x2="90" y2="40" stroke="rgba(247,249,252,0.15)" strokeWidth="0.4" />
-                  <circle cx="90" cy="20" r="2" fill="rgba(247,249,252,0.6)" />
-                  <circle cx="10" cy="80" r="2" fill="rgba(247,249,252,0.6)" />
-                </svg>
-                <span
-                  className="absolute bottom-5 left-5 font-[var(--font-mono)] uppercase"
-                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "rgba(247,249,252,0.7)" }}
-                >
-                  {insight.category}
-                </span>
+                {/*
+                 * Fix: FeaturedInsight always rendered this procedural
+                 * gradient/SVG placeholder, even when an admin had
+                 * uploaded a real cover image — the image was simply
+                 * never consumed here. Renders the real image on top
+                 * when `coverImage` exists; falls back to the original
+                 * placeholder (unchanged below) otherwise, matching
+                 * `ProjectGallery`'s existing "real image if present,
+                 * else placeholder" pattern.
+                 */}
+                {insight.coverImage ? (
+                  <Image
+                    src={insight.coverImage}
+                    alt={insight.title}
+                    fill
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <>
+                    <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden preserveAspectRatio="none">
+                      <line x1="10" y1="80" x2="90" y2="20" stroke="rgba(247,249,252,0.25)" strokeWidth="0.4" />
+                      <line x1="10" y1="60" x2="90" y2="40" stroke="rgba(247,249,252,0.15)" strokeWidth="0.4" />
+                      <circle cx="90" cy="20" r="2" fill="rgba(247,249,252,0.6)" />
+                      <circle cx="10" cy="80" r="2" fill="rgba(247,249,252,0.6)" />
+                    </svg>
+                    <span
+                      className="absolute bottom-5 left-5 font-[var(--font-mono)] uppercase"
+                      style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "rgba(247,249,252,0.7)" }}
+                    >
+                      {insight.category}
+                    </span>
+                  </>
+                )}
               </div>
             </ScaleReveal>
           </div>

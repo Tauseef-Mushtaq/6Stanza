@@ -28,6 +28,12 @@ function toProjectItem(row: ProjectRow): ProjectItem {
     technologies: row.technologies,
     outcome: row.outcome,
     accent: row.accent,
+    // Fix: `media_path` reached the database via the admin's cover
+    // image upload but no card-level consumer (home Work section,
+    // /projects FeaturedProjects) ever read it back — only the detail
+    // page's separate `gallery` (project_media table) was wired up.
+    // Same `getPublicMediaUrl` pattern already used everywhere else.
+    coverImage: getPublicMediaUrl("projects", row.media_path),
   };
 }
 

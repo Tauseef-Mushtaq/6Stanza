@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, Divider } from "@/components/ui/Divider";
@@ -130,7 +131,24 @@ export async function Work() {
                         border: "1px solid var(--color-border)",
                       }}
                     >
-                      <ProjectDiagram seed={i} accent={project.accent} />
+                      {/*
+                       * Fix: this section always rendered ProjectDiagram
+                       * even when a real cover image existed —
+                       * `project.coverImage` was never consumed here.
+                       * Falls back to the original placeholder when no
+                       * image has been uploaded for this project.
+                       */}
+                      {project.coverImage ? (
+                        <Image
+                          src={project.coverImage}
+                          alt={project.title}
+                          fill
+                          sizes="(min-width: 1024px) 58vw, 100vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <ProjectDiagram seed={i} accent={project.accent} />
+                      )}
                     </div>
                   </ScaleReveal>
                 </div>

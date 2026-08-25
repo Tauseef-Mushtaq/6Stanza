@@ -22,16 +22,18 @@ const PANEL_ASPECTS = ["aspect-[16/10]", "aspect-[3/4]", "aspect-[4/3]", "aspect
  * rather than a normal image grid, per the brief's explicit
  * instruction not to place three images in a row.
  *
- * Module 9K: each of the four panels independently renders a real
- * uploaded image when one is available at that index, and falls back
- * to the original gradient/diagram placeholder otherwise — this is
- * exactly the "ready to swap for real screenshots/video without
- * touching the layout or motion" the component's own comment already
- * promised, so no layout/motion code changed, only what fills a panel.
- * Only the first four `images` are ever shown, matching the fixed
- * four-panel layout (spec §13 — "preserve the existing layout").
+ * Module 9K (revised): every uploaded image is now rendered, not just
+ * the first four — the panel count follows `images.length` whenever
+ * there's at least one real image, cycling through the same four
+ * width/aspect variants for visual rhythm. Only when there are zero
+ * uploaded images does this fall back to the original fixed four-panel
+ * procedural placeholder, so a project with no gallery yet still shows
+ * something.
  */
 export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProps) {
+  const hasImages = images.length > 0;
+  const panelCount = hasImages ? images.length : PANEL_WIDTHS.length;
+
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-4xl)" }}>
@@ -43,18 +45,20 @@ export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProp
 
       <div className="mt-12">
         <HorizontalScroller trackClassName="items-center px-[var(--container-padding)] gap-6 lg:gap-8">
-          {PANEL_WIDTHS.map((width, i) => {
-            const image = images[i];
+          {Array.from({ length: panelCount }, (_, i) => {
+            const image = hasImages ? images[i] : undefined;
+            const width = PANEL_WIDTHS[i % PANEL_WIDTHS.length];
+            const aspect = PANEL_ASPECTS[i % PANEL_ASPECTS.length];
             return (
               <div
-                key={i}
-                className={`relative shrink-0 ${PANEL_ASPECTS[i]} overflow-hidden rounded-[var(--radius-lg)]`}
+                key={image ? image.src : i}
+                className={`relative shrink-0 ${aspect} overflow-hidden rounded-[var(--radius-lg)]`}
                 style={{
                   width,
                   maxWidth: "720px",
                   background: image
                     ? undefined
-                    : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + i * 3}%), hsl(${accent} 65% ${26 + i * 4}%))`,
+                    : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + (i % 4) * 3}%), hsl(${accent} 65% ${26 + (i % 4) * 4}%))`,
                   border: "1px solid var(--color-border)",
                 }}
               >

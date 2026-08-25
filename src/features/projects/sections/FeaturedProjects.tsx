@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { Divider } from "@/components/ui/Divider";
@@ -123,7 +124,24 @@ export async function FeaturedProjects() {
                           border: "1px solid var(--color-border)",
                         }}
                       >
-                        <ProjectVisual seed={i} accent={project.accent} mode={mode} />
+                        {/*
+                         * Fix: same gap as Work.tsx (home) — this
+                         * always rendered ProjectVisual even when a
+                         * real cover image existed. Falls back to the
+                         * original placeholder when none has been
+                         * uploaded.
+                         */}
+                        {project.coverImage ? (
+                          <Image
+                            src={project.coverImage}
+                            alt={project.title}
+                            fill
+                            sizes="(min-width: 1024px) 58vw, 100vw"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <ProjectVisual seed={i} accent={project.accent} mode={mode} />
+                        )}
                       </div>
                     </ScaleReveal>
                   </div>
