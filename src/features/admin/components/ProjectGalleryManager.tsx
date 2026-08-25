@@ -106,9 +106,8 @@ export const ProjectGalleryManager = forwardRef<
     },
   }));
 
-  async function handleFiles(files: FileList) {
+  async function handleFiles(fileArray: File[]) {
     setError(null);
-    const fileArray = Array.from(files);
 
     if (isStaged) {
       // Nothing to persist yet — just validate and hold onto the files
@@ -184,9 +183,18 @@ export const ProjectGalleryManager = forwardRef<
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
+    // Extract the actual File objects out of the FileList *before*
+    // resetting `.value` below. `e.target.files` is a live reference
+    // tied to the input, not a snapshot — clearing the input's value
+    // (done so selecting the same file twice in a row still fires a
+    // change event next time) also empties that same FileList out
+    // from under a held reference to it. Converting to a plain array
+    // here decouples the actual File objects from the input, the same
+    // way `MediaUploadField`'s single-file version already does with
+    // `e.target.files?.[0]`.
+    const fileArray = e.target.files ? Array.from(e.target.files) : [];
     e.target.value = "";
-    if (files && files.length > 0) void handleFiles(files);
+    if (fileArray.length > 0) void handleFiles(fileArray);
   }
 
   function handleRemove(id: string) {
