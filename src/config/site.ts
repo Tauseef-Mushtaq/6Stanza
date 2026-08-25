@@ -28,3 +28,19 @@ export function whatsappLink(message?: string): string {
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
+/**
+ * Official 6STANZA social/contact channels. WhatsApp is intentionally
+ * excluded here (it's derived via `whatsappLink()` above, which needs
+ * the optional prefilled message) — everything else a link or icon
+ * row needs lives in this one object so it only changes in one place.
+ */
+export type SocialPlatform = "linkedin" | "tiktok" | "instagram" | "facebook" | "email" | "whatsapp";
+
+export const socialLinks = {
+  linkedin: "https://www.linkedin.com/company/6stanza/",
+  tiktok: "https://www.tiktok.com/@6stanza_.official",
+  instagram: "https://www.instagram.com/6stanzaofficial",
+  facebook: "https://www.facebook.com/profile.php?id=61593514495213",
+  email: "6stanzaofficial@gmail.com",
+} as const;
+

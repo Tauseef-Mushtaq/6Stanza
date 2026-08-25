@@ -1,6 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, Divider } from "@/components/ui/Divider";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { Reveal } from "@/components/motion";
 import { whatsappLink } from "@/config/site";
 
@@ -50,6 +51,15 @@ export function ContactDetails() {
             >
               Chat with us →
             </a>
+          </div>
+          <div className="flex flex-col gap-4 py-8 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3
+              className="font-[var(--font-display)] tracking-tight"
+              style={{ fontSize: "var(--text-h3)", lineHeight: "var(--leading-tight)" }}
+            >
+              Follow along
+            </h3>
+            <SocialLinks size={20} />
           </div>
         </div>
       </Container>

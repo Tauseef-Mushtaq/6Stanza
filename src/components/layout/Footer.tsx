@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Divider } from "@/components/ui/Divider";
+import { SocialLinks } from "@/components/ui/SocialLinks";
 import { primaryNav } from "@/config/routes";
 import { siteConfig, whatsappLink } from "@/config/site";
 
@@ -41,6 +42,8 @@ export function Footer() {
             </Link>
           </nav>
         </div>
+
+        <SocialLinks className="mt-8" />
 
         <p className="mt-12" style={{ color: "var(--color-muted)", fontSize: "var(--text-caption)" }}>
           © {year} {siteConfig.legalName}. All rights reserved.
