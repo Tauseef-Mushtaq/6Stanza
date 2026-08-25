@@ -99,7 +99,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       <ProjectDetailHero project={project} index={index} total={total} positioning={detail.positioning} />
       <ProjectOverview summary={detail.overview.summary} contribution={detail.overview.contribution} />
       <ProjectChallenge challenge={detail.challenge} />
-      <ProjectSolution solution={detail.solution} accent={project.accent} />
+      <ProjectSolution solution={detail.solution} accent={project.accent} image={detail.gallery[0]} />
       <ProjectArchitecture groups={detail.architecture} />
       <ProjectGallery accent={project.accent} seed={index} images={detail.gallery} />
       <ProjectOutcome outcomeStatement={detail.outcomeStatement} outcome={project.outcome} />

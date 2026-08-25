@@ -2,10 +2,14 @@ import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { Reveal, ScaleReveal } from "@/components/motion";
+import Image from "next/image";
+import type { ProjectGalleryImage } from "@/features/projects/data/projectDetails";
 
 interface ProjectSolutionProps {
   solution: string;
   accent: number;
+  /** Module 9K (display fix) — this chapter never had any image support at all; it always rendered the procedural SVG regardless of what the admin uploaded. The page now passes the first gallery image here (when one exists) so this chapter shows real project artwork like the other visual chapters do — falls back to the original placeholder when the project has no gallery images yet. */
+  image?: ProjectGalleryImage;
 }
 
 /**
@@ -15,7 +19,7 @@ interface ProjectSolutionProps {
  * with the project's own accent so it doesn't feel interchangeable
  * with the Challenge chapter above it.
  */
-export function ProjectSolution({ solution, accent }: ProjectSolutionProps) {
+export function ProjectSolution({ solution, accent, image }: ProjectSolutionProps) {
   return (
     <section className="relative w-full" style={{ background: "var(--color-background)" }}>
       <Container style={{ paddingBlock: "var(--space-section)" }}>
@@ -39,27 +43,31 @@ export function ProjectSolution({ solution, accent }: ProjectSolutionProps) {
               className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-lg)]"
               style={{
                 maxHeight: "48vh",
-                background: `linear-gradient(160deg, hsl(${accent} 85% 12%), hsl(${accent} 70% 30%))`,
+                background: image ? "var(--color-surface)" : `linear-gradient(160deg, hsl(${accent} 85% 12%), hsl(${accent} 70% 30%))`,
                 border: "1px solid var(--color-border)",
               }}
             >
-              <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
-                {[18, 32, 46].map((r, i) => (
-                  <rect
-                    key={r}
-                    x={50 - r}
-                    y={50 - r}
-                    width={r * 2}
-                    height={r * 2}
-                    fill="none"
-                    stroke={`hsl(${accent} 70% 82%)`}
-                    strokeWidth="0.3"
-                    opacity={0.35 + i * 0.15}
-                    rx="4"
-                  />
-                ))}
-                <circle cx="50" cy="50" r="3" fill={`hsl(${accent} 75% 85%)`} opacity={0.9} />
-              </svg>
+              {image ? (
+                <Image src={image.src} alt={image.alt} fill className="object-contain" sizes="(min-width: 1024px) 40vw, 90vw" />
+              ) : (
+                <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
+                  {[18, 32, 46].map((r, i) => (
+                    <rect
+                      key={r}
+                      x={50 - r}
+                      y={50 - r}
+                      width={r * 2}
+                      height={r * 2}
+                      fill="none"
+                      stroke={`hsl(${accent} 70% 82%)`}
+                      strokeWidth="0.3"
+                      opacity={0.35 + i * 0.15}
+                      rx="4"
+                    />
+                  ))}
+                  <circle cx="50" cy="50" r="3" fill={`hsl(${accent} 75% 85%)`} opacity={0.9} />
+                </svg>
+              )}
             </div>
           </ScaleReveal>
         </div>

@@ -36,7 +36,19 @@ export interface HeaderAuthState {
 export function Header({ authState }: { authState: HeaderAuthState | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  // Close the account dropdown on outside click.
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [accountOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 64);
@@ -92,33 +104,71 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {authState ? (
-            <div className="hidden items-center gap-4 sm:flex">
-              <span
-                className="font-[var(--font-mono)] uppercase"
+            <div ref={accountRef} className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setAccountOpen((v) => !v)}
+                aria-expanded={accountOpen}
+                className="flex items-center gap-2 font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
                 style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
               >
-                {authState.displayName ?? "Account"}
-              </span>
-              {authState.isAdmin ? (
-                <Link
-                  href="/admin"
-                  className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
-                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full"
+                  style={{ background: "var(--color-brand)", color: "var(--stz-white)", fontSize: "var(--text-label)" }}
+                  aria-hidden
                 >
-                  Admin
-                </Link>
-              ) : null}
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
-                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                  {(authState.displayName ?? "A").charAt(0).toUpperCase()}
+                </span>
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 10 10"
+                  aria-hidden
+                  className={cn("transition-transform duration-200", accountOpen && "rotate-180")}
                 >
-                  Log out
-                </button>
-              </form>
+                  <path d="M1 3l4 4 4-4" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+
+              <div
+                className={cn(
+                  "absolute right-0 top-full mt-3 w-48 origin-top-right rounded-[var(--radius-md)] border py-2 transition-[opacity,transform] duration-150",
+                  accountOpen ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
+                )}
+                style={{
+                  background: "rgba(8, 14, 26, 0.98)",
+                  borderColor: "var(--color-border-inverse)",
+                  backdropFilter: "blur(14px)",
+                }}
+              >
+                <div
+                  className="truncate px-4 pb-2 font-[var(--font-mono)] uppercase"
+                  style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--color-muted-inverse)" }}
+                >
+                  {authState.displayName ?? "Account"}
+                </div>
+                {authState.isAdmin ? (
+                  <Link
+                    href="/admin"
+                    onClick={() => setAccountOpen(false)}
+                    className="block px-4 py-2 font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                    style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                  >
+                    Admin
+                  </Link>
+                ) : null}
+                <form action={logoutAction}>
+                  <button
+                    type="submit"
+                    className="block w-full px-4 py-2 text-left font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                    style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
+                  >
+                    Log out
+                  </button>
+                </form>
+              </div>
             </div>
           ) : (
             <Link
@@ -129,15 +179,6 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
               Log in
             </Link>
           )}
-          <Link
-            href={whatsappLink("Hi 6STANZA, I'd like to get in touch.")}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)] sm:inline"
-            style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
-          >
-            WhatsApp
-          </Link>
           <Link
             href={ctaRoute.href}
             className="hidden rounded-[var(--radius-pill)] px-5 py-2.5 font-[var(--font-sans)] font-medium transition-[filter] hover:brightness-110 sm:inline-flex"

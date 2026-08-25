@@ -112,7 +112,12 @@ export function LoginForm({
           </FieldGroup>
 
           <FieldGroup>
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <TextLink href="/forgot-password" style={{ fontSize: "var(--text-small)" }}>
+                Forgot password?
+              </TextLink>
+            </div>
             <Input
               id="password"
               type="password"

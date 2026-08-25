@@ -12,7 +12,7 @@ interface ProjectGalleryProps {
   images?: ProjectGalleryImage[];
 }
 
-const PANEL_WIDTHS = ["58vw", "38vw", "48vw", "34vw"];
+const PANEL_WIDTHS = ["40vw", "26vw", "32vw", "24vw"];
 const PANEL_ASPECTS = ["aspect-[16/10]", "aspect-[3/4]", "aspect-[4/3]", "aspect-[3/4]"];
 // Module 9K (gallery-rendering fix) — the four variants above are
 // tuned for wide photography and were built before real uploads
@@ -23,7 +23,19 @@ const PANEL_ASPECTS = ["aspect-[16/10]", "aspect-[3/4]", "aspect-[4/3]", "aspect
 // A single tall, closer-to-square box plus `object-contain` (see
 // below) fits both photography and screenshots without cropping
 // either.
+//
+// Module 9K (scroll fix) — the panel widths/max-width above were
+// tuned for the ORIGINAL 16:10/4:3 placeholder shapes, which are wider
+// than tall. Pairing that same width scale with the taller 4:5 box
+// made real-image panels taller than this section's pinned viewport-
+// height stage, so the top/bottom of every uploaded image was clipped
+// off-screen during the scroll — not a cropping problem this time, a
+// literal "the panel doesn't fit the pinned stage" problem. Narrower
+// widths (already reduced above) plus the explicit `maxHeight` below
+// keep every panel — placeholder or real image — inside the pinned
+// section regardless of aspect ratio or viewport size.
 const UPLOADED_PANEL_ASPECT = "aspect-[4/5]";
+const PANEL_MAX_HEIGHT = "50vh";
 
 /**
  * CHAPTER 06 — project gallery (spec §10 Ch.06). A vertical-scroll-
@@ -65,7 +77,8 @@ export function ProjectGallery({ accent, seed, images = [] }: ProjectGalleryProp
                 className={`relative shrink-0 ${aspect} overflow-hidden rounded-[var(--radius-lg)]`}
                 style={{
                   width,
-                  maxWidth: "720px",
+                  maxWidth: image ? "420px" : "720px",
+                  maxHeight: PANEL_MAX_HEIGHT,
                   background: image ? "var(--color-surface)" : `linear-gradient(${135 + i * 30}deg, hsl(${accent} 85% ${10 + (i % 4) * 3}%), hsl(${accent} 65% ${26 + (i % 4) * 4}%))`,
                   border: "1px solid var(--color-border)",
                 }}
