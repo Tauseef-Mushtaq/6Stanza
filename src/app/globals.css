@@ -8,6 +8,13 @@
    ========================================================================== */
 
 :root {
+  /* Tell the browser our app actually supports both schemes (it renders
+     its own light/dark surfaces via the tokens below) so native form
+     control chrome — select dropdown, checkbox/radio ticks, scrollbars —
+     matches the app theme instead of the browser guessing from the OS
+     alone. Fix-1: this was previously unset. */
+  color-scheme: light dark;
+
   /* ---- Layout ---------------------------------------------------------- */
   /* Static fallback for SSR/first paint. Header.tsx overwrites this on
      `document.documentElement` with the real measured height via
@@ -224,6 +231,24 @@
     --color-foreground: var(--stz-white);
     --color-muted: var(--color-muted-inverse);
     --color-border: var(--color-border-inverse);
+
+    /*
+     * Fix-1 (form input contrast): --color-surface / --color-surface-elevated /
+     * --color-border-subtle were hardcoded to light hex values (--stz-white,
+     * #ffffff) and never flipped here, while --color-text-primary DOES flip
+     * (it re-resolves through --color-foreground above). Every shared form
+     * control (components/ui/form/Field.tsx: Input/Textarea/Select, used by
+     * every admin CMS form) is styled as
+     * `background: var(--color-surface); color: var(--color-text-primary);`
+     * — so in dark mode that rendered white text on a still-white field
+     * background. This is the actual root cause of the invisible-input-text
+     * bug. Overriding the surface tokens here (once, at the source) fixes
+     * every consumer without touching component code or inventing a
+     * second/parallel field-color system.
+     */
+    --color-surface: var(--stz-navy-800);
+    --color-surface-elevated: var(--stz-navy-700);
+    --color-border-subtle: rgba(247, 249, 252, 0.12);
   }
 }
 
@@ -263,4 +288,32 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 3px;
+}
+
+/*
+ * Fix-1 (form input contrast) — browser autofill (Chrome/Safari/Edge)
+ * paints its own opaque background + text color over any `background`
+ * we set, in both themes, which can silently reintroduce the exact
+ * invisible-text bug this module fixes. The only reliable override is
+ * a huge inset box-shadow (a fully opaque "fake background" the
+ * browser lets us paint) plus forcing `-webkit-text-fill-color`, since
+ * `color` alone is ignored on autofilled fields in WebKit/Blink.
+ * `transition` with a very long delay prevents the yellow/blue flash
+ * before our shadow takes over. Applies globally to every input, so
+ * no per-form duplication.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  caret-color: var(--color-text-primary);
+  transition: background-color 600000s 0s, color 600000s 0s;
 }
