@@ -38,6 +38,7 @@ const adminLinks = [
   { href: "/admin/services", label: "Services" },
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/team", label: "Team" },
+  { href: "/admin/testimonials", label: "Testimonials" },
   { href: "/admin/insights", label: "Insights" },
   { href: "/admin/users", label: "Users" },
 ];

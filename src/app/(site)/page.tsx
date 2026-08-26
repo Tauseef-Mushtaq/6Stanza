@@ -4,6 +4,7 @@ import { Positioning } from "@/features/home/sections/Positioning";
 import { Services } from "@/features/home/sections/Services";
 import { SixSJourney } from "@/features/home/sections/SixSJourney";
 import { Work } from "@/features/home/sections/Work";
+import { Testimonials } from "@/features/home/sections/Testimonials";
 import { TeamJourney } from "@/features/home/sections/TeamJourney";
 import { FinalCta } from "@/features/home/sections/FinalCta";
 import { getPublicTeam } from "@/features/team/data/publicTeam";
@@ -58,6 +59,7 @@ export default async function HomePage() {
       <Services />
       <SixSJourney />
       <Work />
+      <Testimonials />
       <TeamJourney team={team.data} teamOk={team.ok} />
       <FinalCta />
     </>

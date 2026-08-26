@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine, SubtleGrid } from "@/components/ui/Divider";
@@ -39,6 +40,16 @@ export function StartProjectHero() {
             are enough to start a real conversation — no account, no
             sales call required first.
           </p>
+        </Reveal>
+
+        <Reveal direction="up" delay={0.32}>
+          <Link
+            href="/discovery"
+            className="inline-flex w-fit items-center gap-2 underline-offset-4 transition-colors hover:underline"
+            style={{ fontSize: "var(--text-small)", color: "var(--color-brand-soft)" }}
+          >
+            Not sure yet? Try Smart Project Discovery →
+          </Link>
         </Reveal>
 
         <Reveal direction="up" delay={0.4} className="flex items-center gap-2 pt-2" style={{ color: "var(--color-text-muted)" }}>

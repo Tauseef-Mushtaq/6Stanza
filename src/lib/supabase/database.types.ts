@@ -29,6 +29,11 @@
  * Project gallery — the one content type with a genuine multi-image
  * relation. No other table changed: `media_path`/`image_path` on
  * `services`/`projects`/`team_members`/`insights` are unchanged.
+ *
+ * Module Consultation Booking 1: added `consultation_bookings`
+ * (0010_consultation_bookings.sql) — written only by the Cal.com
+ * webhook route handler via the service-role client, never by any
+ * anon/authenticated request. See that migration's header comment.
  */
 
 export type InquiryStatus = "new" | "in_progress" | "resolved" | "archived";
@@ -130,6 +135,37 @@ export interface Database {
           timeline?: string | null;
           budget?: string | null;
           message: string;
+        };
+        Update: {
+          status?: InquiryStatus;
+        };
+        Relationships: [];
+      };
+      consultation_bookings: {
+        Row: {
+          id: string;
+          cal_booking_uid: string;
+          event_type_slug: string;
+          attendee_name: string;
+          attendee_email: string;
+          project_inquiry_id: string | null;
+          starts_at: string;
+          ends_at: string;
+          status: InquiryStatus;
+          raw_payload: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          cal_booking_uid: string;
+          event_type_slug: string;
+          attendee_name: string;
+          attendee_email: string;
+          project_inquiry_id?: string | null;
+          starts_at: string;
+          ends_at: string;
+          status?: InquiryStatus;
+          raw_payload: Json;
         };
         Update: {
           status?: InquiryStatus;
@@ -364,6 +400,45 @@ export interface Database {
           storage_path?: string;
           alt_text?: string | null;
           sort_order?: number;
+        };
+        Relationships: [];
+      };
+      testimonials: {
+        Row: {
+          id: string;
+          name: string;
+          role: string | null;
+          company: string | null;
+          quote: string;
+          image_path: string | null;
+          project_id: string | null;
+          sort_order: number;
+          status: ContentStatus;
+          created_at: string;
+          updated_at: string;
+          published_at: string | null;
+        };
+        Insert: {
+          name: string;
+          role?: string | null;
+          company?: string | null;
+          quote: string;
+          image_path?: string | null;
+          project_id?: string | null;
+          sort_order?: number;
+          status?: ContentStatus;
+          published_at?: string | null;
+        };
+        Update: {
+          name?: string;
+          role?: string | null;
+          company?: string | null;
+          quote?: string;
+          image_path?: string | null;
+          project_id?: string | null;
+          sort_order?: number;
+          status?: ContentStatus;
+          published_at?: string | null;
         };
         Relationships: [];
       };

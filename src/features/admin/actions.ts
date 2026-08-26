@@ -38,11 +38,18 @@ import {
 } from "@/lib/services/projectMediaService";
 import { updateUserRoleForAdmin, deleteUserForAdmin } from "@/lib/services/userManagementService";
 import { updateUserRoleSchema, deleteUserSchema } from "@/lib/validation/adminUser";
+import {
+  createTestimonial,
+  updateTestimonialForAdmin,
+  archiveTestimonialForAdmin,
+  deleteTestimonialForAdmin,
+} from "@/lib/services/testimonialContentService";
 import type { ServiceRow } from "@/lib/repositories/services";
 import type { ProjectRow } from "@/lib/repositories/projects";
 import type { TeamMemberRow } from "@/lib/repositories/teamMembers";
 import type { InsightRow } from "@/lib/repositories/insights";
 import type { ProjectMediaRow } from "@/lib/repositories/projectMedia";
+import type { TestimonialRow } from "@/lib/repositories/testimonials";
 
 export type UpdateInquiryStatusActionResult = { ok: true } | { ok: false; message: string };
 
@@ -511,4 +518,62 @@ export async function deleteUserAction(input: { userId: string }): Promise<Delet
 
   revalidatePath("/admin/users");
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------
+// MODULE-TESTIMONIAL-1 — Testimonials CMS Server Actions. Same chain as
+// the Services/Team actions above:
+//
+//   Admin UI (TestimonialForm/Archive.../Delete...)
+//     ↓
+//   Server Action (this file)
+//     ↓
+//   src/lib/services/testimonialContentService.ts (validation + requireAdmin)
+//     ↓
+//   src/lib/repositories/testimonials.ts
+//     ↓
+//   Supabase + RLS (testimonials_insert_admin_only / _update_admin_only)
+//
+// Revalidates both the admin list/detail and the public routes that
+// actually render testimonials today: `/` (the Home testimonials
+// chapter) only, since there is no other public consumer yet.
+// ---------------------------------------------------------------------
+
+export type TestimonialActionResult =
+  | { ok: true; data: TestimonialRow }
+  | { ok: false; fieldErrors: Record<string, string>; message?: undefined }
+  | { ok: false; message: string; fieldErrors?: undefined };
+
+function revalidateTestimonialPaths(id?: string) {
+  revalidatePath("/admin/testimonials");
+  if (id) revalidatePath(`/admin/testimonials/${id}`);
+  revalidatePath("/");
+}
+
+export async function createTestimonialAction(raw: unknown): Promise<TestimonialActionResult> {
+  const result = await createTestimonial(raw);
+  if (result.ok) revalidateTestimonialPaths(result.data.id);
+  return result;
+}
+
+export async function updateTestimonialAction(id: string, raw: unknown): Promise<TestimonialActionResult> {
+  const result = await updateTestimonialForAdmin(id, raw);
+  if (result.ok) revalidateTestimonialPaths(id);
+  return result;
+}
+
+export type ArchiveTestimonialActionResult = { ok: true; data: TestimonialRow | null } | { ok: false; message: string };
+
+export async function archiveTestimonialAction(id: string): Promise<ArchiveTestimonialActionResult> {
+  const result = await archiveTestimonialForAdmin(id);
+  if (result.ok) revalidateTestimonialPaths(id);
+  return result;
+}
+
+export type DeleteTestimonialActionResult = { ok: true } | { ok: false; message: string };
+
+export async function deleteTestimonialAction(id: string): Promise<DeleteTestimonialActionResult> {
+  const result = await deleteTestimonialForAdmin(id);
+  if (result.ok) revalidateTestimonialPaths();
+  return result;
 }

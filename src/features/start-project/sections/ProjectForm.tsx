@@ -29,8 +29,28 @@ type Status = "idle" | "submitting" | "error";
  * height for comfortable interaction, not a full viewport each).
  * Numbered chapter headers keep the editorial pacing without pinning.
  */
-export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
-  const [inquiry, setInquiry] = useState<ProjectInquiry>(emptyInquiry);
+export function ProjectForm({
+  onSuccess,
+  initial,
+}: {
+  // Module: Consultation Booking 1 — now receives the submitted
+  // `ProjectInquiry` rather than firing with no arguments. Purely
+  // additive: every existing caller that ignored the (previously
+  // nonexistent) argument still works, and `StartProjectPageContent`
+  // uses it only to pass name/email through as a convenience prefill
+  // to `/start-project/consultation` — the inquiry submission itself
+  // (`submitInquiry` below) is completely unchanged.
+  onSuccess: (inquiry: ProjectInquiry) => void;
+  initial?: Partial<ProjectInquiry>;
+}) {
+  // Module: Smart Project Discovery handoff — `initial` (from
+  // `takeDiscoveryPrefill()` in `StartProjectPageContent`) only ever
+  // seeds this component's OWN local state. Nothing downstream
+  // changes: the same `validateInquiry` and `submitInquiry` run
+  // exactly as before, so a discovery-prefilled submission is
+  // validated identically to a manually-typed one, and every prefilled
+  // value stays fully editable before it does.
+  const [inquiry, setInquiry] = useState<ProjectInquiry>(() => ({ ...emptyInquiry, ...initial }));
   const [errors, setErrors] = useState<InquiryErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -62,7 +82,7 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
     setSubmitError(null);
     try {
       await submitInquiry(inquiry);
-      onSuccess();
+      onSuccess(inquiry);
     } catch (err) {
       // Entered information is preserved — `inquiry` state is untouched.
       // `submitInquiry` already resolves the failure down to a safe,
@@ -102,6 +122,16 @@ export function ProjectForm({ onSuccess }: { onSuccess: () => void }) {
         />
       </div>
       <Container className="flex flex-col gap-20" style={{ paddingBlock: "var(--space-section)" }}>
+        {initial ? (
+          <Reveal direction="up" className="-mb-12">
+            <p
+              className="rounded-[var(--radius-md)] px-4 py-3"
+              style={{ fontSize: "var(--text-small)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border)", background: "var(--color-surface)" }}
+            >
+              Prefilled from your Smart Project Discovery answers — feel free to edit anything below before sending.
+            </p>
+          </Reveal>
+        ) : null}
         {/* CHAPTER 02 — Project Context */}
         <div className="flex flex-col gap-8">
           <Reveal direction="up" className="flex items-center gap-3">

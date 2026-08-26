@@ -124,6 +124,26 @@ export const insightBlockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("callout"), label: z.string().trim().min(1).max(100), text: z.string().trim().min(1).max(1000) }),
 ]);
 
+// ---------------------------------------------------------------------
+// testimonials (MODULE-TESTIMONIAL-1)
+// ---------------------------------------------------------------------
+
+/** Matches the nullable `uuid references public.projects` FK — empty string means "no project attribution", not a validation failure. */
+const optionalProjectIdSchema = z.string().trim().uuid().optional().or(z.literal(""));
+
+export const testimonialSchema = z.object({
+  name: z.string().trim().min(1, "Enter a name.").max(200),
+  role: z.string().trim().max(200).optional().or(z.literal("")),
+  company: z.string().trim().max(200).optional().or(z.literal("")),
+  quote: z.string().trim().min(1, "Enter the testimonial quote.").max(2000),
+  imagePath: mediaPathSchema,
+  projectId: optionalProjectIdSchema,
+  sortOrder: sortOrderSchema.default(0),
+  status: contentStatusSchema.default("draft"),
+});
+
+export type TestimonialInput = z.infer<typeof testimonialSchema>;
+
 export const insightSchema = z.object({
   slug: slugSchema,
   title: z.string().trim().min(1, "Enter a title.").max(200),

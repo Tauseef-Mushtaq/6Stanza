@@ -4,13 +4,29 @@ import { TechnicalLabel } from "@/components/ui/TechnicalLabel";
 import { AccentLine } from "@/components/ui/Divider";
 import { Reveal } from "@/components/motion";
 
+interface SuccessStateProps {
+  /** Module: Consultation Booking 1 — optional convenience prefill for the "Book a Consultation" link; never required, never validated here. */
+  name?: string;
+  email?: string;
+}
+
 /**
  * Shown in place of the form once submission succeeds. Viewport-
  * dominant per §16 ("success state = viewport-dominant"), with real
  * `<Link>` navigation options rather than leaving the visitor stranded
  * on a blank confirmation.
+ *
+ * Module: Consultation Booking 1 — adds a "Book a Consultation" link
+ * alongside the existing three. This is deliberately a distinct,
+ * optional next step rather than part of the inquiry submission
+ * itself (spec: "clearly distinguish inquiry submission from
+ * consultation booking") — sending the inquiry already succeeded by
+ * the time this renders; booking a slot is a separate action the
+ * visitor may or may not take.
  */
-export function SuccessState() {
+export function SuccessState({ name, email }: SuccessStateProps = {}) {
+  const consultationHref = buildConsultationHref(name, email);
+
   return (
     <section
       className="relative flex min-h-svh w-full flex-col justify-center"
@@ -36,6 +52,16 @@ export function SuccessState() {
             We&apos;ll review what you&apos;ve shared and get back to you.
             In the meantime, feel free to look around.
           </p>
+        </Reveal>
+
+        <Reveal direction="up" delay={0.28}>
+          <Link
+            href={consultationHref}
+            className="inline-flex w-fit items-center justify-center rounded-[var(--radius-pill)] px-6 py-3 font-[var(--font-sans)] font-medium transition-colors"
+            style={{ background: "var(--color-brand)", color: "var(--stz-white)", fontSize: "var(--text-small)" }}
+          >
+            Book a Consultation →
+          </Link>
         </Reveal>
 
         <Reveal direction="up" delay={0.3} className="flex flex-wrap gap-4 pt-4">
@@ -64,4 +90,12 @@ export function SuccessState() {
       </Container>
     </section>
   );
+}
+
+function buildConsultationHref(name?: string, email?: string): string {
+  const params = new URLSearchParams();
+  if (name) params.set("name", name);
+  if (email) params.set("email", email);
+  const query = params.toString();
+  return query ? `/start-project/consultation?${query}` : "/start-project/consultation";
 }
