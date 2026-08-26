@@ -1,8 +1,14 @@
 import "server-only";
 
 import { calBookingWebhookSchema } from "@/lib/validation/consultationBooking";
-import { upsertConsultationBooking } from "@/lib/repositories/consultationBookings";
-import type { Json } from "@/lib/supabase/database.types";
+import {
+  upsertConsultationBooking,
+  listConsultationBookings,
+  getConsultationBooking,
+  type ConsultationBookingRow,
+} from "@/lib/repositories/consultationBookings";
+import type { InquiryStatus, Json } from "@/lib/supabase/database.types";
+import type { AdminGetResult, AdminListResult } from "@/lib/services/contactInquiryService";
 
 export type RecordConsultationBookingResult =
   | { ok: true; skipped?: undefined }
@@ -55,5 +61,34 @@ export async function recordConsultationBooking(raw: unknown): Promise<RecordCon
   } catch (error) {
     console.error("recordConsultationBooking: upsert failed", error);
     return { ok: false, message: "Unable to record this booking." };
+  }
+}
+
+/**
+ * Module Consultation Booking 2 — admin read path. Same discriminated
+ * result shape as `contactInquiryService.ts`'s admin reads: never
+ * rethrows a raw Supabase/Postgres error to a Server Component, logs
+ * server-side and returns a message the page renders as its error
+ * state instead.
+ */
+export async function listConsultationBookingsForAdmin(
+  status?: InquiryStatus
+): Promise<AdminListResult<ConsultationBookingRow>> {
+  try {
+    const data = await listConsultationBookings(status);
+    return { ok: true, data };
+  } catch (error) {
+    console.error("listConsultationBookingsForAdmin: query failed", error);
+    return { ok: false, message: "Unable to load consultation bookings. Please try again." };
+  }
+}
+
+export async function getConsultationBookingForAdmin(id: string): Promise<AdminGetResult<ConsultationBookingRow>> {
+  try {
+    const data = await getConsultationBooking(id);
+    return { ok: true, data };
+  } catch (error) {
+    console.error("getConsultationBookingForAdmin: query failed", error);
+    return { ok: false, message: "Unable to load this booking. Please try again." };
   }
 }
