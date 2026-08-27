@@ -15,23 +15,36 @@ export type ProjectInquiryRow = Database["public"]["Tables"]["project_inquiries"
  * go through RLS's `project_inquiries_insert_anyone` policy like any
  * other request would, so this repository can't accidentally bypass
  * the security model it's supposed to be respecting.
+ *
+ * Returns the inserted row (via `.select().single()`) rather than
+ * `void` — the inquiry-email notification step
+ * (`src/lib/notifications/inquiryNotifications.ts`, wired in from
+ * `projectInquiryService.ts`) needs the generated `id`/`created_at`
+ * and can't do a second round-trip to fetch them without weakening the
+ * "insert must succeed before notifying" ordering this was built to
+ * preserve.
  */
-export async function insertProjectInquiry(input: ProjectInquiryInput) {
+export async function insertProjectInquiry(input: ProjectInquiryInput): Promise<ProjectInquiryRow> {
   const supabase = await createSupabaseServerClient();
 
-  const { error } = await supabase.from("project_inquiries").insert({
-    name: input.name,
-    email: input.email,
-    company: input.company || null,
-    project_title: input.projectTitle,
-    services: input.services,
-    stage: input.stage ?? null,
-    timeline: input.timeline ?? null,
-    budget: input.budget ?? null,
-    message: input.message,
-  });
+  const { data, error } = await supabase
+    .from("project_inquiries")
+    .insert({
+      name: input.name,
+      email: input.email,
+      company: input.company || null,
+      project_title: input.projectTitle,
+      services: input.services,
+      stage: input.stage ?? null,
+      timeline: input.timeline ?? null,
+      budget: input.budget ?? null,
+      message: input.message,
+    })
+    .select("*")
+    .single();
 
   if (error) throw error;
+  return data;
 }
 
 /**

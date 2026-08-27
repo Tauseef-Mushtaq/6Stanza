@@ -18,3 +18,9 @@ export const primaryNav: RouteConfig[] = [
 ];
 
 export const ctaRoute: RouteConfig = { label: "Start a Project", href: "/start-project" };
+
+/** Footer-only legal links — not part of `primaryNav` (spec: keep primary nav unchanged), but still exposed to `sitemap.ts`. */
+export const legalNav: RouteConfig[] = [
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms-of-service" },
+];

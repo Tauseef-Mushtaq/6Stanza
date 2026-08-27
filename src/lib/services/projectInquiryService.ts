@@ -10,6 +10,7 @@ import {
 } from "@/lib/repositories/projectInquiries";
 import type { InquiryStatus } from "@/lib/supabase/database.types";
 import type { AdminListResult, AdminGetResult, AdminUpdateResult } from "./contactInquiryService";
+import { sendProjectInquiryNotifications } from "@/lib/notifications/inquiryNotifications";
 
 export type SubmitProjectInquiryResult =
   | { ok: true }
@@ -48,13 +49,36 @@ export async function submitProjectInquiry(raw: unknown): Promise<SubmitProjectI
     return { ok: true };
   }
 
+  let inserted: ProjectInquiryRow;
   try {
-    await insertProjectInquiry(parsed.data);
-    return { ok: true };
+    inserted = await insertProjectInquiry(parsed.data);
   } catch (error) {
     console.error("submitProjectInquiry: insert failed", error);
     return { ok: false, message: "Unable to submit your inquiry. Please try again." };
   }
+
+  // save inquiry → attempt notifications → log result → return successful
+  // inquiry result. The insert above has already committed by this point,
+  // so nothing past here can turn a successful submission into a failed
+  // one: `sendProjectInquiryNotifications` never throws (see its own
+  // doc comment) and its outcome is only logged, not surfaced to the
+  // caller/`ProjectForm.tsx`.
+  try {
+    const outcome = await sendProjectInquiryNotifications(inserted);
+    if (outcome.attempted && outcome.errors.length > 0) {
+      console.warn("submitProjectInquiry: inquiry saved, notification had issues", {
+        inquiryId: inserted.id,
+        outcome,
+      });
+    }
+  } catch (error) {
+    // Belt-and-suspenders: sendProjectInquiryNotifications is written to
+    // never throw, but a saved inquiry must survive even if that
+    // guarantee is ever broken by a future edit.
+    console.error("submitProjectInquiry: notification step threw unexpectedly", { inquiryId: inserted.id, error });
+  }
+
+  return { ok: true };
 }
 
 /** Module 7A — admin read path. Same rationale as `contactInquiryService`'s equivalents. */

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
-import { primaryNav, ctaRoute } from "@/config/routes";
+import { primaryNav, ctaRoute, legalNav } from "@/config/routes";
 import { getPublicServices } from "@/features/services/data/publicServices";
 import { getPublicProjects } from "@/features/projects/data/publicProjects";
 import { getPublicInsights } from "@/features/insights/data/publicInsights";
@@ -34,7 +34,7 @@ import { getPublicInsights } from "@/features/insights/data/publicInsights";
  * ones, from Google's crawl.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticRoutes = ["/", ...primaryNav.map((r) => r.href), ctaRoute.href];
+  const staticRoutes = ["/", ...primaryNav.map((r) => r.href), ctaRoute.href, ...legalNav.map((r) => r.href)];
 
   const [services, projects, insights] = await Promise.all([
     getPublicServices(),

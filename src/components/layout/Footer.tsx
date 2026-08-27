@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Divider } from "@/components/ui/Divider";
 import { SocialLinks } from "@/components/ui/SocialLinks";
-import { primaryNav } from "@/config/routes";
+import { primaryNav, legalNav } from "@/config/routes";
 import { siteConfig, whatsappLink } from "@/config/site";
 
 export function Footer() {
@@ -45,9 +45,23 @@ export function Footer() {
 
         <SocialLinks className="mt-8" />
 
-        <p className="mt-12" style={{ color: "var(--color-muted)", fontSize: "var(--text-caption)" }}>
-          © {year} {siteConfig.legalName}. All rights reserved.
-        </p>
+        <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p style={{ color: "var(--color-muted)", fontSize: "var(--text-caption)" }}>
+            © {year} {siteConfig.legalName}. All rights reserved.
+          </p>
+          <nav aria-label="Legal" className="flex flex-wrap gap-x-6 gap-y-2">
+            {legalNav.map((route) => (
+              <Link
+                key={route.href}
+                href={route.href}
+                className="transition-colors hover:text-[var(--color-brand)]"
+                style={{ fontSize: "var(--text-caption)", color: "var(--color-muted)" }}
+              >
+                {route.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </Container>
     </footer>
   );
