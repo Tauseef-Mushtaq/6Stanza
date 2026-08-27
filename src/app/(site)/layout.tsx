@@ -3,6 +3,7 @@ import { ScrollLifecycle } from "@/components/layout/ScrollLifecycle";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
+import { CookieConsentBanner } from "@/components/ui/CookieConsentBanner";
 import { LazyFaqChatbot } from "@/components/ui/LazyFaqChatbot";
 import { getCurrentProfile } from "@/lib/auth/session";
 
@@ -49,6 +50,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <Footer />
       <WhatsAppButton />
       <LazyFaqChatbot />
+      <CookieConsentBanner />
     </SmoothScrollProvider>
   );
 }

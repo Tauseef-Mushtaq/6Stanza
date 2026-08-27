@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { BrandMark } from "@/components/ui/BrandMark";
@@ -33,7 +34,19 @@ export interface HeaderAuthState {
   isAdmin?: boolean;
 }
 
+/**
+ * Active-route check for nav highlighting. Home ("/") only matches
+ * the exact path — every other route also matches its own detail
+ * pages (e.g. `/services/[slug]` keeps "Services" highlighted), same
+ * logic used for both the desktop and mobile nav lists below.
+ */
+function isRouteActive(href: string, pathname: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Header({ authState }: { authState: HeaderAuthState | null }) {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -81,27 +94,42 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
       }}
     >
       <Container className="flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-3" aria-label={siteConfig.name}>
+        <Link
+          href="/"
+          className="flex items-center gap-3"
+          aria-label={siteConfig.name}
+          aria-current={pathname === "/" ? "page" : undefined}
+        >
           <BrandMark size={30} priority className="drop-shadow-[0_0_18px_rgba(31,99,255,0.45)]" />
           <span
             className="hidden font-[var(--font-mono)] uppercase tracking-[0.2em] sm:inline"
-            style={{ fontSize: "var(--text-label)", color: "var(--stz-white)" }}
+            style={{ fontSize: "var(--text-label)", color: pathname === "/" ? "var(--color-brand-soft)" : "var(--stz-white)" }}
           >
             {siteConfig.name}
           </span>
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
-          {primaryNav.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
-              style={{ fontSize: "var(--text-label)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
-            >
-              {route.label}
-            </Link>
-          ))}
+          {primaryNav.map((route) => {
+            const active = isRouteActive(route.href, pathname);
+            return (
+              <Link
+                key={route.href}
+                href={route.href}
+                aria-current={active ? "page" : undefined}
+                className="font-[var(--font-mono)] uppercase transition-colors hover:text-[var(--color-brand-soft)]"
+                style={{
+                  fontSize: "var(--text-label)",
+                  letterSpacing: "var(--tracking-label)",
+                  color: active ? "var(--color-brand-soft)" : "var(--stz-white)",
+                  paddingBottom: "2px",
+                  borderBottom: `1.5px solid ${active ? "var(--color-brand-soft)" : "transparent"}`,
+                }}
+              >
+                {route.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -222,18 +250,26 @@ export function Header({ authState }: { authState: HeaderAuthState | null }) {
         }}
       >
         <Container className="flex flex-col gap-1 py-4">
-          {primaryNav.map((route, i) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 py-3 font-[var(--font-mono)] uppercase"
-              style={{ fontSize: "var(--text-nav)", letterSpacing: "var(--tracking-label)", color: "var(--stz-white)" }}
-            >
-              <span style={{ color: "var(--color-brand-soft)" }}>{String(i + 1).padStart(2, "0")}</span>
-              {route.label}
-            </Link>
-          ))}
+          {primaryNav.map((route, i) => {
+            const active = isRouteActive(route.href, pathname);
+            return (
+              <Link
+                key={route.href}
+                href={route.href}
+                onClick={() => setMobileOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className="flex items-center gap-3 py-3 font-[var(--font-mono)] uppercase"
+                style={{
+                  fontSize: "var(--text-nav)",
+                  letterSpacing: "var(--tracking-label)",
+                  color: active ? "var(--color-brand-soft)" : "var(--stz-white)",
+                }}
+              >
+                <span style={{ color: "var(--color-brand-soft)" }}>{String(i + 1).padStart(2, "0")}</span>
+                {route.label}
+              </Link>
+            );
+          })}
           <Link
             href={ctaRoute.href}
             onClick={() => setMobileOpen(false)}
